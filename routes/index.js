@@ -9,5 +9,6 @@ router.get('/', function(req, res, next) {
 router.use('/users', require('./users'));
 router.use('/schedules', require('./schedules'));
 router.use('/calenders', require('./calenders'));
+router.use('/messages', require('./messages'));
 
 module.exports = router;
