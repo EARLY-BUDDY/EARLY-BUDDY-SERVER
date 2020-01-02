@@ -39,7 +39,6 @@ jspm_packages/
 *.pem
 *.ppk
 
-
 # TypeScript v1 declaration files
 typings/
 

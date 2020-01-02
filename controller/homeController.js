@@ -8,6 +8,7 @@ module.exports = {
         let userIdx = req.query.userIdx;
         if(!userIdx){
             res.status(statusCode.BAD_REQUEST).send(resUtil.successFalse(resMsg.NULL_VALUE));
+            return;
         }else{
             /** logic **
              * 보여줄 스케쥴 받아오기
@@ -15,8 +16,8 @@ module.exports = {
              *      - 없으면 return 값이 null (CHECK)
              *      - 있으면 return 값이 있음
              * 2. 1-2인 경우에, 스케쥴 startTime이 
-             *      - 오늘이 아니면 ready = false로 설정하고, scheduleName, scheduleStartTime, endAddress, idx return (CHECK)
-             *      - 오늘이면 해당 스케쥴에 달린 scheduleNotices의 noticeTime 값에 가져오기 (CHECK)
+             *      - 5시간 전이 아니면 ready = false로 설정하고, scheduleName, scheduleStartTime, endAddress, idx return (CHECK)
+             *      - 5시간 남았으면 해당 스케쥴에 달린 scheduleNotices의 noticeTime 값 가져오기 (CHECK)
              * 3. 2-2 시간이,
              *      - 아직 지나지 않았으면, ready = false로 설정하고, scheduleName, scheduleStartTime, endAddress, idx return (CHECK)
              *      - 같거나 지났으면, ready = true로 설정하고, 아래와 같은 데이터를 return
@@ -43,17 +44,18 @@ module.exports = {
                     scheduleIdx = userSchedule[i].scheduleIdx;
                     break;
                 }
-            }
+            } // -> sql로 바꾸고 싶음
 
             // 해당 일정이 없으면 null 반환
-            if(scheduleIdx == -1 || userSchedule.length == 0)
+            if(scheduleIdx == -1 || userSchedule.length == 0){
                 res.status(statusCode.OK).send(resUtil.successTrue(resMsg.GET_HOME_SCHEDULE_SUCCESS, null));
-            else{
+                return;
+            }else{
                 // 해당 일정이 있으면, 일정 요약 정보와 알림 정보 가져오기
                 var scheduleSummary = await schedules.getScheduleSummary(scheduleIdx);
                 var scheduleNoticeList = await schedules.getScheduleNotice(scheduleIdx);
             
-                console.log('scheduleNoticeList : ' + scheduleNoticeList.length);
+                console.log('scheduleNoticeList : ' + scheduleNoticeList);
                 // 남아있는 교통수단(trans) 개수 가져오기
                 for(var transCount = 0; transCount < scheduleNoticeList.length; transCount++){
                     let tempArriveDate = new Date(scheduleNoticeList[transCount].arriveTime);
@@ -78,6 +80,7 @@ module.exports = {
                         scheduleSummaryData
                     };
                     res.status(statusCode.OK).send(resUtil.successTrue(resMsg.GET_HOME_SCHEDULE_SUCCESS, data));
+                    return;
                 }
                 var scheduleTransList = await schedules.getScheduleFirstTrans(scheduleIdx);
                 //console.log(scheduleTransList);
@@ -92,16 +95,22 @@ module.exports = {
 
                 if(firstTransIdx == -1){
                     res.status(statusCode.BAD_REQUEST).send(resUtil.successFalse(resMsg.FIND_TRANS_FAILED));
+                    return;
+                }else{
+
+                    // TODO: 실시간 버스 정보 받아오기
+
+                    var data = {
+                        ready : true,
+                        lastTransCount : transCount,
+                        arriveTime : scheduleNoticeList[currentTransIdx].arriveTime,
+                        firstTrans : scheduleTransList[firstTransIdx],
+                        nextTransArriveTime: nextTransArriveTime,
+                        scheduleSummaryData
+                    }
+                    res.status(statusCode.OK).send(resUtil.successTrue(resMsg.GET_HOME_SCHEDULE_SUCCESS, data));
+                    return;
                 }
-                var data = {
-                    ready : true,
-                    lastTransCount : transCount,
-                    arriveTime : scheduleNoticeList[currentTransIdx].arriveTime,
-                    firstTrans : scheduleTransList[firstTransIdx],
-                    nextTransArriveTime: nextTransArriveTime,
-                    scheduleSummaryData
-                }
-                res.status(statusCode.OK).send(resUtil.successTrue(resMsg.GET_HOME_SCHEDULE_SUCCESS, data));
             }
         }
     }

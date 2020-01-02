@@ -26,71 +26,32 @@ module.exports = {
     addWalk: async (trafficType, distance, sectionTime, pathIdx) => {
         const addWalkDetailQuery = 'INSERT INTO details (trafficType, distance, sectionTime) VALUES (?,?,?)'; //walk = 3 subway = 1, bus = 2
         const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
-        return await pool.Transaction(async (conn) => {
-            let addWalkDetailResult = await conn.query(addWalkDetailQuery, [trafficType, distance, sectionTime]);
-            await conn.query(addPathsDetailsQuery, [pathIdx, addWalkDetailResult.insertId]);
-            console.log('걷기 경로 추가 성공!')
+        return await pool.Transaction((conn) => {
+            let addWalkDetailResult = conn.query(addWalkDetailQuery, [trafficType, distance, sectionTime]);
+            addWalkDetailResult.then(detailRes => {
+                let addWalkPathsDetailsResult = conn.query(addPathsDetailsQuery, [pathIdx, detailRes.insertId]);
+                console.log('********************');
+                console.log('걷기 추가 완료');
+                console.log('********************');
+            })
         })
     },
-    addBus: async (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType, stopArray, pathIdx, startTime, scheduleIdx, noticeMin, arriveCount, isFirst) => {
+    addBus: (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType, stopArray, pathIdx) => {
         const addBusDetailQuery = 'INSERT INTO details (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)';
         const addBusDetailsStopsQuery = 'INSERT INTO detailsStops (detailIdx, stopIdx) VALUES (?,?)';//RT
         const addBusStopsQuery = 'INSERT INTO stops (stopName) VALUES (?)';
         const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
         const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
-
-        return await pool.Transaction(async (conn) => {
+        return pool.Transaction(async (conn) => {
             let addBusDetailResult = await conn.query(addBusDetailQuery, [trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType]);
-            if (isFirst == 1) {
-            let getBusRouteListResult = await commonAPI.getBusRouteList(Number(busNo));
-            let busRouteId = 0;
-            for (var k = 0; k < getBusRouteListResult.length; k++) {
-                if (busNo == getBusRouteListResult[k].busRouteNm[0]) {
-                    busRouteId = Number(getBusRouteListResult[k].busRouteId[0]);
-                    break;
-                }
-            }
-            let busRouteInfo = await commonAPI.getBusRouteInfo(busRouteId);
-            let routeTerm = Number(busRouteInfo[0].term[0]);
-            let getStationByNameResult = await commonAPI.getStationByName(stopArray[0].stationName);
-            let getBusTimeByStationResult = await commonAPI.getBusTimeByStation(getStationByNameResult[0].arsId[0], busRouteId);
-            let firstBusHour = Number((getBusTimeByStationResult[0].firstBusTm[0].split(''))[0] + (getBusTimeByStationResult[0].firstBusTm[0].split(''))[1]);
-            let firstBusMin = Number(((getBusTimeByStationResult[0].firstBusTm[0]).split(''))[2] + ((getBusTimeByStationResult[0].firstBusTm[0]).split(''))[3]);
-            let lastBusHour = Number(((getBusTimeByStationResult[0].lastBusTm[0]).split(''))[0] + ((getBusTimeByStationResult[0].lastBusTm[0]).split(''))[1]);
-            let lastBusMin = Number(((getBusTimeByStationResult[0].lastBusTm[0]).split(''))[2] + ((getBusTimeByStationResult[0].lastBusTm[0]).split(''))[3]);
-            let startTm = moment().year(startTime[0]).month(startTime[1] - 1).date(startTime[2]).hour(startTime[3]).minute(startTime[4]);
-            let leastTm = startTm.subtract(sectionTime, 'm').toString();
-            let arriveArr = [];
-
-            if (moment(leastTm).hour() < firstBusHour && moment(leastTm).hour() > lastBusHour) {
-                console.log('새벽이라 차 없어요');
-            }
-            if (moment(leastTm).hour() > firstBusHour && moment(leastTm).hour() < lastBusHour) {
-                let tempBusTime = moment().year(startTime[0]).month(startTime[1] - 1).date(startTime[2]).hour(firstBusHour).minute(firstBusMin);
-                while (startTm.diff(tempBusTime, 'minutes') > routeTerm) {
-                    let newTime = tempBusTime.add(routeTerm, "m");
-                    arriveArr.push(newTime.toString());
-                }
-            }
-            for (var l = 1; l <= arriveCount; l++) {
-                await conn.query(addSchedulesNoticesQuery, [scheduleIdx, moment(arriveArr[(arriveArr.length) - l]).format('YYYY-MM-DD HH:mm:ss'), moment(arriveArr[(arriveArr.length) - l]).subtract(noticeMin, 'minutes').format('YYYY-MM-DD HH:mm:ss')])
-            }
             for (var j = 0; j < stopArray.length; j++) {
                 let addBusStopsResult = await conn.query(addBusStopsQuery, [stopArray[j].stationName]);
                 let addBusDetailsStopsResult = await conn.query(addBusDetailsStopsQuery, [addBusDetailResult.insertId, addBusStopsResult.insertId]);
             }
-            await conn.query(addPathsDetailsQuery, [pathIdx, addBusDetailResult.insertId])
-            console.log('버스 경로 추가 성공!')
-            }
-            else {
-                for (var j = 0; j < stopArray.length; j++) {
-                    let addBusStopsResult = await conn.query(addBusStopsQuery, [stopArray[j].stationName]);
-                    let addBusDetailsStopsResult = await conn.query(addBusDetailsStopsQuery, [addBusDetailResult.insertId, addBusStopsResult.insertId]);
-                }
-                await conn.query(addPathsDetailsQuery, [pathIdx, addBusDetailResult.insertId])
-                console.log('버스 경로 추가 성공!')
-            }
-
+            let addBusPathsDetailsResult = await conn.query(addPathsDetailsQuery, [pathIdx, addBusDetailResult.insertId]);
+            console.log('********************');
+            console.log('버스 추가 완료');
+            console.log('********************');
         })
             .catch((err) => {
                 console.log('addBus err : ' + err);
@@ -100,96 +61,28 @@ module.exports = {
                 })
             })
     },
-    addSubway: async (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, stopArray, pathIdx, stationID, wayCode, startTime, scheduleIdx, noticeMin, arriveCount, isFirst) => {
+    addSubway: (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, stopArray, pathIdx) => {
         const addSubwayDetailQuery = 'INSERT INTO details (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
         const addSubwayStopsQuery = 'INSERT INTO stops (stopName) VALUES (?)';
         const addSubwayDetailsStopsQuery = 'INSERT INTO detailsStops (detailIdx, stopIdx) VALUES (?,?)';//RT
         const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
-        const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
-
-        return await pool.Transaction(async (conn) => {
-            let startTm = moment().year(startTime[0]).month(startTime[1] - 1).date(startTime[2]).hour(startTime[3]).minute(startTime[4]);
-            let leastTm = startTm.subtract(sectionTime, 'm').toString();
-            let getSubwayArriveTimeResult = await odsayAPI.getSubwayArriveTime(stationID, wayCode);
-            let arriveArr = [];
-            let noticeArr = [];
-            let timeArray = [];
-            if (isFirst == 1) {
-                console.log(moment(startTm).format('YYYY-MM-DD HH:mm:ss') + ' 은 ' + moment(leastTm).day() + '요일 입니다');
-                if (moment(leastTm).day() == 6) { //토요일
-                    if(getSubwayArriveTimeResult.SatList.down === undefined) {
-                        timeArray = getSubwayArriveTimeResult.SatList.up.time; 
-                    }
-                    else {
-                        timeArray = getSubwayArriveTimeResult.SatList.down.time; 
-                    }
-                }
-                else if (moment(leastTm) == 0) { //일요일
-                    if(getSubwayArriveTimeResult.SunList.down === undefined) {
-                        timeArray = getSubwayArriveTimeResult.SunList.up.time; 
-                    }
-                    else {
-                        timeArray = getSubwayArriveTimeResult.SunList.down.time;
-                    }
-                }
-                else {
-                    if(getSubwayArriveTimeResult.OrdList.down === undefined) {
-                        timeArray = getSubwayArriveTimeResult.OrdList.up.time; 
-                    }
-                    else {
-                        timeArray = getSubwayArriveTimeResult.OrdList.down.time;  
-                    }
-                }
-                
-                for (var k = 0; k < timeArray.length; k++) {
-                    //startTime 0 년도 1 월 2 일 3 몇시 4 몇분
-                    if (timeArray[k].Idx == moment(leastTm).hour()) {
-                        let minArr = timeArray[k].list.split(' ');
-                        for (var j = 0; j < minArr.length; j++) {
-                            if (moment(leastTm).minute() > Number(minArr[j].split('(')[0])) {
-                                arriveArr.push(moment(leastTm).minute(minArr[j].split('(')[0]).toString());
-                                noticeArr.push(moment(leastTm).minute(minArr[j].split('(')[0] - noticeMin).toString());
-                            }
-                        }
-                        if(arriveArr.length < arriveCount) {
-                            minArr = timeArray[k-1].list.split(' ');
-                            for(var l = minArr.length-1 ; l > minArr.length -1 - arriveCount ; l--) {
-                                arriveArr.push(moment(leastTm).subtract(1, 'hours').minute(minArr[l].split('(')[0]).toString());
-                                noticeArr.push(moment(leastTm).subtract(1, 'hours').minute(minArr[l].split('(')[0] - noticeMin).toString());
-                            }
-                        }
-                    }
-                    
-                } //시간 작업
-                for (var i = 0; i < arriveCount; i++) {
-                    await conn.query(addSchedulesNoticesQuery, [scheduleIdx, moment(arriveArr[arriveArr.length - 1 - i]).format('YYYY-MM-DD HH:mm:ss'), moment(noticeArr[noticeArr.length - 1 - i]).format('YYYY-MM-DD HH:mm:ss')])
-                }
-                let addSubwayDetailResult = await conn.query(addSubwayDetailQuery, [trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude]);
-                for (var i = 0; i < stopArray.length; i++) {
-                    let addSubwayStopsResult = await conn.query(addSubwayStopsQuery, [stopArray[i].stationName]);
-                    let addSubwayDetailsStopsResult = await conn.query(addSubwayDetailsStopsQuery, [addSubwayDetailResult.insertId, addSubwayStopsResult.insertId]);
-                }
-                await conn.query(addPathsDetailsQuery, [pathIdx, addSubwayDetailResult.insertId]);
-                console.log('지하철 경로 추가 완료!')
+        return pool.Transaction(async (conn) => {
+            let addSubwayDetailResult = await conn.query(addSubwayDetailQuery, [trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude]);
+            for (var i = 0; i < stopArray.length; i++) {
+                let addSubwayStopsResult = await conn.query(addSubwayStopsQuery, [stopArray[i].stationName]);
+                let addSubwayDetailsStopsResult = await conn.query(addSubwayDetailsStopsQuery, [addSubwayDetailResult.insertId, addSubwayStopsResult.insertId]);
             }
-            else {
-                let addSubwayDetailResult = await conn.query(addSubwayDetailQuery, [trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude]);
-                for (var i = 0; i < stopArray.length; i++) {
-                    let addSubwayStopsResult = await conn.query(addSubwayStopsQuery, [stopArray[i].stationName]);
-                    let addSubwayDetailsStopsResult = await conn.query(addSubwayDetailsStopsQuery, [addSubwayDetailResult.insertId, addSubwayStopsResult.insertId]);
-                }
-                await conn.query(addPathsDetailsQuery, [pathIdx, addSubwayDetailResult.insertId]);
-                console.log('지하철 경로 추가 완료!')
-            }
+            await conn.query(addPathsDetailsQuery, [pathIdx, addSubwayDetailResult.insertId]);
+            console.log('********************');
+            console.log(' 지하철 추가 완료');
+            console.log('********************')
         })
     },
-    addPathsDetails: async (pathIdx, detailIdx) => {
-        const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
-        return await pool.queryParam_Arr(addPathsDetailsQuery, [pathIdx, detailIdx])
-            .catch((err) => {
-                console.log('addPathsDetail err : ' + err);
-
-            })
+    addTime: async (arriveTime, noticeTime, scheduleIdx) => {
+        const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
+        return await pool.Transaction((conn) => {
+            conn.query(addSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime]);
+        })
     },
     addSchedulesNotices: async (scheduleIdx, arriveTime, noticeTime) => {
         const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
@@ -222,6 +115,13 @@ module.exports = {
             .catch((err) => {
                 console.log('addWeekdays err : ' + err);
 
+            })
+    },
+    getDeviceToken: async(userIdx) => {
+        const getDeviceToken = `SELECT deviceToken FROM users WHERE userIdx = ?`
+        return await pool.queryParam_Arr(getDeviceToken, [userIdx])
+            .catch((err) => {
+                console.log('getDeviceToken err : ' + err);
             })
     },
     deleteSchedule : async (scheduleIdx) => {
@@ -259,22 +159,22 @@ module.exports = {
             queryResult.push(await connection.query(deleteWeekdaysQuery, scheduleIdx));
             queryResult.push(await connection.query(deleteSchedulesQuery, scheduleIdx));
             queryResult.push(await connection.query(deleteUserSchedulesQuery, scheduleIdx));
-        }).then( async (result)=>{
+        }).then(async (result) => {
             return queryResult;
-        }).catch((err)=>{
+        }).catch((err) => {
             console.log('delete err : ' + err);
             throw err;
         })
     },
-    updateSchedule : async (scheduleIdx) => {
-        
+    updateSchedule: async (scheduleIdx) => {
+
     },
-    getSchedules : async (scheduleIdx) => {
+    getSchedules: async (scheduleIdx) => {
         const getSchedulesQuery = `SELECT * FROM schedules LEFT JOIN schedulesPaths ON schedules.scheduleIdx = schedulesPaths.scheduleIdx
         LEFT JOIN paths ON paths.pathIdx = schedulesPaths.pathIdx WHERE schedules.scheduleIdx = ?`;
         return await pool.queryParam_Arr(getSchedulesQuery, [scheduleIdx])
-        .catch((err)=>{
-            console.log('getSchedulesQuery err : ' + err);
-        })
+            .catch((err) => {
+                console.log('getSchedulesQuery err : ' + err);
+            })
     }
 }

@@ -1,3 +1,4 @@
+
 /*1. header jwt 토큰의 유형이나 사용된 해시 알고리즘의 정보
 2. payload 클라이언트에 대한 정보
 3. signature header에서 지정한 알고리즘과 secret key 로 header 와 payload를 담는다.*/
@@ -44,52 +45,41 @@ module.exports = {
         return jwt.sign(payload, secretOrPrivateKey, options);
     }
 }
-/*module.exports = {
-    sign: (user)=>{
+
+const jwt = require('jsonwebtoken');
+const secretKey = require('../config/secretKey').key;
+//jwt 모듈화
+module.exports = {
+    //jwt 발급후 토큰 리턴
+    sign: function (ID) {
         const options = {
-            // 서명을 만들기 위해 사용된 알고리즘
             algorithm: "HS256",
-            // 토큰의 유효기간을 지정.
-            expiresIn: "1h"
+            expiresIn: 60 * 60 * 24 * 30 //30 days
         };
         const payload = {
-            userIdx : user.userId
+            userIdx: ID
         };
-        const result = {
-            token : jwt.sign(payload, secretOrPrivateKey, options),
-            refreshToken: randToken.uid(256)
-        };
-        return result;
+        let token = jwt.sign(payload, secretKey, options);
+        return token;
     },
-    verify:(token)=>{
+    //jwt 검증
+    //검증이 성공할 경우 사용자 정보 리턴(ID값)
+    //검증이 실패할 경우 -1 리턴
+    //에러날 경우 -2 리턴
+    verify: function (token) {
         let decoded;
+        let err;
         try {
-            decoded = jwt.verify(token, secretOrPrivateKey);
-        }catch(err){
-            if(err.message==="jwt expired"){
-                console.log("expired token");
-                return -3;
-            }else if(err.message ==="invalid token"){
-                console.log("invalid token");
-                return -2;
-            }else{
-                console.log("invalid token");
+            decoded = jwt.verify(token, secretKey);
+        }
+        catch (err) {
+            if (err.message == 'jwt must be provided') { // 비회원이라 토큰이 없을 때
+                return -1;
+            }
+            else {
                 return -2;
             }
         }
-        return decoded;
-    },
-    refresh: (user) =>{
-        const payload = {
-            idx : user.idx,
-            pwd : user.pwd
-        };
-        return jwt.sign(payload, secretKeyOrPrivateKey, options);
+        return decoded.userIdx;
     }
 };
-
-sign: (user) =>{
-    const payload ={
-        idx:user.idx,
-        
-    }}*/

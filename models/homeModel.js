@@ -23,9 +23,8 @@ module.exports = {
     getScheduleNotice : async (scheduleIdx) => {
         const getScheduleNoticeTimeQuery = `SELECT sn.noticeTime, sn.arriveTime
                                         From schedulesNotices sn
-                                        WHERE sn.scheduleIdx = '${scheduleIdx}'`
-
-        // 혹시 모르니, arriveTime이 늦는 순서로 orderBy
+                                        WHERE sn.scheduleIdx = '${scheduleIdx}'
+                                        ORDER BY sn.arriveTime DESC`
         return await pool.queryParam_Arr(getScheduleNoticeTimeQuery, [scheduleIdx])
         .catch((err) => {
             console.log('getScheduleNoticeTime err : '+ err)
