@@ -30,9 +30,6 @@ module.exports = {
                 if(err) reject(err)
                 else {
                     convert.parseString(result.body, (err, result)=>{
-                        console.log(result.ServiceResult);
-                        console.log(result.ServiceResult.msgHeader[0]);
-                        console.log(result.ServiceResult.msgHeader[0].headerMsg)
                         resolve(result.ServiceResult.msgBody[0].itemList);
                     })
                 }

@@ -6,9 +6,8 @@ const statCode = require('../module/statusCode');
 const pool = require('../module/pool');
 
 module.exports = {
-    searchPath: async (SX, SY, EX, EY) => {
-        
-        let result = await odsayAPI.searchPubTransPath(SX, SY, EX, EY);
+    searchPath: async (SX, SY, EX, EY, SearchPathType) => {
+        let result = await odsayAPI.searchPubTransPath(SX, SY, EX, EY, SearchPathType);
         if (result === undefined) {
             return({
                 code: statCode.BAD_REQUEST,

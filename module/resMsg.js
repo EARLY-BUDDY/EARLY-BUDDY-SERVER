@@ -1,7 +1,7 @@
 module.exports = {
     NULL_VALUE: '입력되지 않은 값이 있습니다',
     INVALID_VALUE: '값이 유효하지 않습니다.',
-
+    
     // 유저
     ALREADY_ID : "이미 사용중인 아이디입니다.",
     MISS_MATCH_PW: "잘못된 비밀번호입니다.",
@@ -44,5 +44,9 @@ module.exports = {
 
     NO_USER: '존재하지 않는 유저입니다',
     GET_HOME_SCHEDULE_SUCCESS: '홈 화면 일정 조회 성공',
-    FIND_TRANS_FAILED : '경로에 교통수단이 없습니다'
+    FIND_TRANS_FAILED : '경로에 교통수단이 없습니다',
+
+    //KAKAO
+    FIND_ADDRESS_COMPLETE : '주소 찾기 성공',
+    FIND_ADDRESS_FAILED : '주소가 없습니다'
 }

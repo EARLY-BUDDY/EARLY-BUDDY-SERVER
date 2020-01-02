@@ -10,6 +10,9 @@ module.exports = {
             res.status(statusCode.BAD_REQUEST).send(resUtil.successFalse(resMsg.NULL_VALUE));
             return;
         }else{
+
+            // try catch로 error 잡아주자~!~!!~
+
             /** logic **
              * 보여줄 스케쥴 받아오기
              * 1. 스케쥴 startTime이 현재 시간보다 뒤에 있는 스케쥴 한개 가져오기
@@ -28,23 +31,25 @@ module.exports = {
              */
 
             // 현재시간
+            // moment는 app.js에서 쓰거나, index.js에서 한번만 선언
             var moment = require('moment');
             require('moment-timezone');
-            moment.tz.setDefault("Asia/Seoul");
             console.log(moment().format('YYYY-MM-DD HH:mm:ss'));
 
             // user에게 할당된 스케쥴 받아와서 일정시간이 지금 시간보다 뒤에 있는 일정이 있는지 검사
             var userSchedule = await schedules.getUserSchedules(userIdx, moment);
             var scheduleIdx = -1;
             for(let i = 0; i<userSchedule.length; i++){
-                let scheduleDate = new Date(userSchedule[i].scheduleStartTime);
-                var currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'))
-                var gap = scheduleDate.getTime() - currentDate.getTime();
-                if(gap > 0){
+                let scheduleDate = moment(userSchedule[i].scheduleStartTime, 'YYYY-MM-DD HH:mm:ss');
+                var currentDate = moment(new Date());
+                if(scheduleDate - currentDate > 0 && scheduleDate.diff(currentDate, 'day') < 8){
                     scheduleIdx = userSchedule[i].scheduleIdx;
                     break;
                 }
             } // -> sql로 바꾸고 싶음
+            // todo: gap을 diff로 바꾸기
+
+            // todo: 반복문을 map, filter 등으로 처리
 
             // 해당 일정이 없으면 null 반환
             if(scheduleIdx == -1 || userSchedule.length == 0){
@@ -58,8 +63,8 @@ module.exports = {
                 console.log('scheduleNoticeList : ' + scheduleNoticeList);
                 // 남아있는 교통수단(trans) 개수 가져오기
                 for(var transCount = 0; transCount < scheduleNoticeList.length; transCount++){
-                    let tempArriveDate = new Date(scheduleNoticeList[transCount].arriveTime);
-                    if(currentDate.getTime() - tempArriveDate.getTime() > 0) break;
+                    let tempArriveDate = moment(scheduleNoticeList[transCount].arriveTime, 'YYYY-MM-DD HH:mm:ss');
+                    if(currentDate - tempArriveDate > 0) break;
                 }
 
                 // 화면에 보여줘야할 trans의 idx
@@ -71,10 +76,10 @@ module.exports = {
                 if(transCount > 1 )
                     nextTransArriveTime = scheduleNoticeList[currentTransIdx-1].arriveTime;
 
-                //console.log(scheduleSummary);
                 var scheduleSummaryData = scheduleSummary[0];
                 // notice 시간보다 더 전이면 ready는 false, schedule summary return 
-                if(gap/1000/60/60 > 5 || transCount < 0){
+                var noticeTime = moment(scheduleNoticeList[currentTransIdx].noticeTime, 'YYYY-MM-DD HH:mm:ss');
+                if(noticeTime > currentDate|| transCount < 0){
                     var data = {
                         ready : false,
                         scheduleSummaryData
@@ -83,7 +88,6 @@ module.exports = {
                     return;
                 }
                 var scheduleTransList = await schedules.getScheduleFirstTrans(scheduleIdx);
-                //console.log(scheduleTransList);
 
                 var firstTransIdx = -1;
                 for(let i = 0; i < scheduleTransList.length; i++){
@@ -91,7 +95,7 @@ module.exports = {
                         firstTransIdx = i;
                         break;
                     }
-                }
+                } // -> find로 하면 더 좋다.
 
                 if(firstTransIdx == -1){
                     res.status(statusCode.BAD_REQUEST).send(resUtil.successFalse(resMsg.FIND_TRANS_FAILED));

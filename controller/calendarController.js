@@ -9,7 +9,7 @@ module.exports = {
         let year = req.query.year;
         let month = req.query.month;
         if(!userIdx){
-            res.status(statusCopl/de.BAD_REQUEST).send(resUtil.successFalse(resMsg.NULL_VALUE));
+            res.status(statusCode.BAD_REQUEST).send(resUtil.successFalse(resMsg.NULL_VALUE));
             return;
         }
         try {

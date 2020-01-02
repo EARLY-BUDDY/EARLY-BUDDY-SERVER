@@ -11,6 +11,6 @@ router.use('/schedules', require('./schedules'));
 router.use('/calenders', require('./calenders'));
 router.use('/searchPath', require('./searchPath'));
 router.use('/home', require('./home'));
-//router.use('/myPage', require('./myPage'));
+router.use('/searchAddress', require('./searchAddress'))
 
 module.exports = router;

@@ -2,10 +2,8 @@ var admin = require("firebase-admin");
 const firebaseConfig = require("../config/firebaseConfig");
 var schedule = require('node-schedule');
 
-// Date (year, month, date?, hours?, minutes?, seconds?, ms?) => Date
 const alarm = {
     setSchedule: async (scheduleIdxs, registerToken, dates) => {
-        console.log('asdfasdf');
         const scheduleNames = [];
         for (var i = 0; i < dates.length; i++) {
             let year = Number(dates[i].split(' ')[0].split('-')[0]);
@@ -60,6 +58,13 @@ const alarm = {
         }).catch(function (error) {
             console.log('보내기 실패 : ', error);
         });
+    },
+    deleteAlarm: async (deleteAlarms) => {
+        console.log(deleteAlarms);
+        for (jobName in deleteAlarms) {
+            var job = 'jobList.' + jobName;
+            eval(job + '.cancel()');
+        }
     }
 }
 
