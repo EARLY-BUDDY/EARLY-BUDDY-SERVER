@@ -41,23 +41,15 @@ module.exports = {
         }
     },
     setFavorite : async (req,res) =>{
-        console.log(userIdx);
-        const {favoriteInfo,favoriteCategory,favoriteLongitude,favoriteLatitude}= req.body;
-        for(i = 0;i<favoriteCategory.length;i++){
-            const {favorite} = (favoriteInfo[i], favoriteCategory[i], favoriteLongitude[i], favoriteLatitude[i]);
-            await userModel.INSERT({favorite});
-        }
-        console.log("req body : ",req.body);
-        
+        const {favoriteInfo, favoriteCategory, favoriteLongitude, favoriteLatitude}= req.body;
+        const userIdx = req.decoded.idx;
         if(!favoriteInfo||!favoriteCategory||!favoriteLongitude||!favoriteLatitude){
             const missParameters = await Object.entries({favoriteInfo,favoriteCategory,favoriteLongitude,favoriteLatitude}).filter(it=>it[1]==undefined).map(it=>it[0]).join(',');
             return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(`favoriteIdx ${missParameters} ${resMsg.NULL_VALUE}`));
         }
         try{
-            const {code, json} = await User.setUserFavorite(favoriteInfo,favoriteCategory,favoriteLongitude,favoriteLatitude,userIdx);
-            console.log(code);
-            console.log(json);
-            return res.status(code).send(json);
+            const {code, json} = await User.setFavorite(favoriteInfo, favoriteCategory, favoriteLongitude, favoriteLatitude,userIdx);
+            return await res.status(code).send(json);
         } catch (err) {
             return await res.status(statusCode.INTERNAL_SERVER_ERROR).send(responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR));
         }

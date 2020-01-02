@@ -111,38 +111,24 @@ module.exports = {
         }
     },
     setFavorite: async (favoriteInfo,favoriteCategory,favoriteLongitude,favoriteLatitude, userIdx ) => {
-        let table ='favorites';
-        let fields = 'favoriteInfo,favoriteCategory,favoriteLongitude,favoriteLatitude';
-        let questions = `?, ?, ?,?`;
-        let values = [favoriteInfo,favoriteCategory,favoriteLongitude,favoriteLatitude];
-        try{
-            const favoriteResult =  await pool.Transaction(
-                `INSERT INTO ${table}(${fields}) 
-                SELECT * FROM userFavorites WHERE userId = '${userIdx}' VALUES (${questions})`,values);
-                const result = await pool.Transaction(`insert into favorites(fields) values(4 valuses`);
-               // result.insertId
-                const secondResult = `insert into userFavorites(userIdx, favIdx) values(userIdx, result.insertId)`)  
-            console.log("favorite result:",favoriteResult);
-            if (favoriteResult === undefined) {
-                return({code : statusCode.BAD_REQUEST, json : responseUtil.successFalse(resMsg.NULL_VALUE)})
-            }
+        const favoritesQuery = `INSERT INTO favorites (favoriteInfo, favoriteCategory, favoriteLongitude, favoriteLatitude) VALUES (?,?,?,?)`;
+        const userFavoriteQuery = (`INSERT INTO usersFavorites (userIdx, favoriteIdx) VALUES (?,?)`);
+        try { 
+            const result = await pool.Transaction(async (conn)=>{
+            let setFavoriteResult = await conn.query(favoritesQuery, [favoriteInfo,favoriteCategory,favoriteLongitude,favoriteLatitude]);
+            await conn.query(userFavoriteQuery, [userIdx,setFavoriteResult.insertId]);
+            });
             return {
                 code: statusCode.OK,
-                json: responseUtil.successTrue(resMsg.SET_FAVORITE_SUCCESS, {favoriteIdx})
+                json: responseUtil.successTrue(resMsg.SET_FAVORITE_SUCCESS)
             };
-        } catch (err) {
-            console.log("favorite result:",favoriteResult);
-            if (err.errno == 1062) {
-                console.log(err.errno, err.code);
-                return {
-                    code: statusCode.BAD_REQUEST,
-                    json: responseUtil.successFalse(resMsg.ALREADY_FAVORITE)
-                };
-            }
-            console.log(err);
-            throw err;
+        } catch(err) {
+            return {
+                code: statusCode.BAD_REQUEST,
+                json: responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR)
+            };
         }
-    }
+
     },
     setDeviceToken: async (userId, deviceToken) => {
         const table ='users';
@@ -166,4 +152,4 @@ module.exports = {
             throw err;
         }
     }
-
+}
