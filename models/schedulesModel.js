@@ -187,7 +187,7 @@ module.exports = {
             returnObj.noticeTime.push(getNoticeTimeResult[i]);
         }
         const getPathResult = await pool.queryParam_Arr(getPathQuery, [scheduleIdx]);
-        returnObj.pathInfo = getPathResult[0];
+        returnObj.path = getPathResult[0];
         const getDetailResult = await pool.queryParam_Arr(getDetailQuery, [getPathResult[0].pathIdx]);
         returnObj.detailInfo = [];
         for (var i = 0; i < getDetailResult.length; i++) {
