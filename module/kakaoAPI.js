@@ -14,10 +14,28 @@ module.exports = {
                 }  
             }
             request(options, async (err, result)=>{
-                console.log(options.uri);
-                console.log(result);
                 const jsonResult = JSON.parse(result.body);
-                console.log(jsonResult);
+                if(err) {
+                    console.log('request err : ' + err);
+                    reject(err)
+                }
+                else resolve(jsonResult);
+            })
+        })
+    },
+    findByKeyword : (findKeyword) => {
+        return new Promise((resolve,reject)=>{
+            const options = {
+                'uri' : `https://dapi.kakao.com/v2/local/search/keyword.json?`, 
+                'headers' : {
+                    'Authorization' : `KakaoAK ${ak.kakao}`,
+                },
+                'qs' : {
+                    'query' : `${findKeyword}`
+                }  
+            }
+            request(options, async (err, result)=>{
+                const jsonResult = JSON.parse(result.body);
                 if(err) {
                     console.log('request err : ' + err);
                     reject(err)

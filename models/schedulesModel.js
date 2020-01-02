@@ -6,16 +6,16 @@ var moment = require('moment');
 const Alarm = require('../module/alarm');
 
 module.exports = {
-    addSchedule: async (scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude) => {
-        const addScheduleQuery = 'INSERT INTO schedules (scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude) VALUES (?,?,?,?,?,?,?,?)';
-        return await pool.queryParam_Arr(addScheduleQuery, [scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude])
+    addSchedule: async (scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude, noticeMin, arriveCount) => {
+        const addScheduleQuery = 'INSERT INTO schedules (scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude, noticeMin, arriveCount) VALUES (?,?,?,?,?,?,?,?,?,?)';
+        return await pool.queryParam_Arr(addScheduleQuery, [scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude, noticeMin, arriveCount])
             .catch((err) => {
                 console.log('addUsersSchedules err : ' + err);
             })
     },
-    addPaths: async (pathType, totalTime, totalPay, totalWalkTime, transitCount) => {
-        const addPathsQuery = 'INSERT INTO paths (pathType, totalTime, totalPay, totalWalkTime, transitCount) VALUES (?,?,?,?,?)';
-        return await pool.queryParam_Arr(addPathsQuery, [pathType, totalTime, totalPay, totalWalkTime, transitCount])
+    addPaths: async (pathType, totalTime, totalPay, totalWalkTime, transitCount, firstStationName) => {
+        const addPathsQuery = 'INSERT INTO paths (pathType, totalTime, totalPay, totalWalkTime, transitCount, firstStationName) VALUES (?,?,?,?,?,?)';
+        return await pool.queryParam_Arr(addPathsQuery, [pathType, totalTime, totalPay, totalWalkTime, transitCount, firstStationName])
             .catch((err) => {
                 console.log('addPaths err : ' + err);
 
@@ -38,7 +38,6 @@ module.exports = {
         const addBusDetailsStopsQuery = 'INSERT INTO detailsStops (detailIdx, stopIdx) VALUES (?,?)';//RT
         const addBusStopsQuery = 'INSERT INTO stops (stopName) VALUES (?)';
         const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
-        const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
         return pool.Transaction(async (conn) => {
             let addBusDetailResult = await conn.query(addBusDetailQuery, [trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType]);
             for (var j = 0; j < stopArray.length; j++) {
@@ -81,14 +80,6 @@ module.exports = {
             conn.query(addSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime]);
         })
     },
-    addSchedulesNotices: async (scheduleIdx, arriveTime, noticeTime) => {
-        const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
-        return await pool.queryParam_Arr(addSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime])
-            .catch((err) => {
-                console.log('addSchedulesNotices err : ' + err);
-
-            })
-    },
     addUsersSchedules: async (userIdx, scheduleIdx) => { //RT
         const addUsersSchedulesQuery = 'INSERT INTO usersSchedules (userIdx, scheduleIdx) VALUES (?,?)';
         return await pool.queryParam_Arr(addUsersSchedulesQuery, [userIdx, scheduleIdx])
@@ -121,7 +112,7 @@ module.exports = {
                 console.log('getDeviceToken err : ' + err);
             })
     },
-    deleteSchedule : async (scheduleIdx) => {
+    deleteSchedule: async (scheduleIdx) => {
         const selectNoticeName = `SELECT noticeName FROM schedulesNotices WHERE scheduleIdx = ?`
         const deleteStopsQuery = `DELETE FROM stops WHERE stops.stopIdx IN ( 
             SELECT detailsStops.stopIdx FROM detailsStops WHERE detailsStops.detailIdx IN ( 
@@ -167,119 +158,48 @@ module.exports = {
             throw err;
         })
     },
-    updateSchedule: async (scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude, scheduleIdx) => {
-        const updateScheduleQuery = 'UPDATE schedules SET scheduleName=?, scheduleStartTime=?, startAddress=?, startLongitude=?, startLatitude=?, endAddress=?, endLongitude=?, endLatitude=? WHERE scheduleIdx = (?)';
-        return await pool.queryParam_Arr(updateScheduleQuery, [scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude, scheduleIdx])
-            .catch((err) => {
-                console.log('updateUsersSchedules err : ' + err);
-            })
-    },
-    updatePaths: async (pathType, totalTime, totalPay, totalWalkTime, transitCount, pathIdx) => {
-        const updatePathsQuery = 'UPDATE paths SET pathType=?, totalTime=?, totalPay=?, totalWalkTime=?, transitCount=? WHERE pathIdx=?';
-        return await pool.queryParam_Arr(updatePathsQuery, [pathType, totalTime, totalPay, totalWalkTime, transitCount, pathIdx])
-            .catch((err) => {
-                console.log('updatePaths err : ' + err);
-            })
-    },
-    updateWalk: (trafficType, distance, sectionTime, pathIdx, detailIdx) => {
-        const updateWalkDetailQuery = `UPDATE details SET trafficType=?, distance=?, sectionTime=? WHERE detailIdx IN (
-                                            SELECT detailIdx FROM details WHERE pathIdx = ?)`; //walk = 3 subway = 1, bus = 2
-        const updatePathsDetailsQuery = 'UPDATE pathsDetails pathIdx =?, detailIdx =?';//RT
-        return  pool.Transaction(async (conn) => {
-            let updateWalkDetailResult = await conn.query(updateWalkDetailQuery, [trafficType, distance, sectionTime, pathIdx]);
-            let updateWalkPathsDetailsResult = await conn.query(updatePathsDetailsQuery, [pathIdx, detailRes.insertId]);
-            console.log('********************');
-            console.log('걷기 수정 완료');
-            console.log('********************');
-        })
-    },
-    updateBus: (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType, stopArray, pathIdx) => {
-        const updateBusDetailQuery = 'UPDATE details SET (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)';
-        const updateBusDetailsStopsQuery = 'UPDATE detailsStops SET (detailIdx, stopIdx) VALUES (?,?)';//RT
-        const updateBusStopsQuery = 'UPDATE stops SET (stopName) VALUES (?)';
-        const updatePathsDetailsQuery = 'UPDATE pathsDetails SET (pathIdx, detailIdx) VALUES (?,?)';//RT
-        const updateSchedulesNoticesQuery = 'UPDATE schedulesNotices SET (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
-        return pool.Transaction(async (conn) => {
-            let updateBusDetailResult = await conn.query(updateBusDetailQuery, [trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType]);
-            for (var j = 0; j < stopArray.length; j++) {
-                let updateBusStopsResult = await conn.query(updateBusStopsQuery, [stopArray[j].stationName]);
-                let updateBusDetailsStopsResult = await conn.query(updateBusDetailsStopsQuery, [updateBusDetailResult.insertId, updateBusStopsResult.insertId]);
-            }
-            let updateBusPathsDetailsResult = await conn.query(updatePathsDetailsQuery, [pathIdx, updateBusDetailResult.insertId]);
-            console.log('********************');
-            console.log('버스 수정 완료');
-            console.log('********************');
-        })
-            .catch((err) => {
-                console.log('updateBus err : ' + err);
-                return ({
-                    code: statCode.BAD_REQUEST,
-                    json: resUtil.successFalse(resMsg.NULL_VALUE)
-                })
-            })
-    },
-    updateSubway: (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, stopArray, pathIdx) => {
-        const updateSubwayDetailQuery = 'UPDATE details SET (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
-        const updateSubwayStopsQuery = 'UPDATE stops SET (stopName) VALUES (?)';
-        const updateSubwayDetailsStopsQuery = 'UPDATE detailsStops SET (detailIdx, stopIdx) VALUES (?,?)';//RT
-        const updatePathsDetailsQuery = 'UPDATE pathsDetails SET (pathIdx, detailIdx) VALUES (?,?)';//RT
-        return pool.Transaction(async (conn) => {
-            let updateSubwayDetailResult = await conn.query(updateSubwayDetailQuery, [trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude]);
-            for (var i = 0; i < stopArray.length; i++) {
-                let updateSubwayStopsResult = await conn.query(updateSubwayStopsQuery, [stopArray[i].stationName]);
-                let updateSubwayDetailsStopsResult = await conn.query(updateSubwayDetailsStopsQuery, [updateSubwayDetailResult.insertId, updateSubwayStopsResult.insertId]);
-            }
-            await conn.query(updatePathsDetailsQuery, [pathIdx, updateSubwayDetailResult.insertId]);
-            console.log('********************');
-            console.log(' 지하철 추가 완료');
-            console.log('********************')
-        })
-    },
-    updateTime: async (arriveTime, noticeTime, scheduleIdx) => {
-        const updateSchedulesNoticesQuery = 'UPDATE schedulesNotices SET (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
-        return await pool.Transaction((conn) => {
-            conn.query(updateSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime]);
-        })
-    },
-    updateSchedulesNotices: async (scheduleIdx, arriveTime, noticeTime) => {
-        const updateSchedulesNoticesQuery = 'UPDATE schedulesNotices SET (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
-        return await pool.queryParam_Arr(updateSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime])
-            .catch((err) => {
-                console.log('updateSchedulesNotices err : ' + err);
-
-            })
-    },
-    updateUsersSchedules: async (userIdx, scheduleIdx) => { //RT
-        const updateUsersSchedulesQuery = 'UPDATE usersSchedules SET (userIdx, scheduleIdx) VALUES (?,?)';
-        return await pool.queryParam_Arr(updateUsersSchedulesQuery, [userIdx, scheduleIdx])
-            .catch((err) => {
-                console.log('updateUsersSchedules err : ' + err);
-
-            })
-    },
-    updateSchedulesPaths: async (scheduleIdx, pathIdx) => {
-        const updateSchedulesPathsQuery = 'UPDATE schedulesPaths SET (scheduleIdx, pathIdx) VALUES  (?,?)'; //RT
-        return await pool.queryParam_Arr(updateSchedulesPathsQuery, [scheduleIdx, pathIdx])
-            .catch((err) => {
-                console.log('updatePaths err : ' + err);
-
-            })
-    },
-
-    updateWeekdays: async (weekdayNum, scheduleIdx) => {
-        const updateWeekdaysQuery = 'UPDATE weekdays SET (weekdayNum, scheduleIdx) VALUES (?,?)';
-        return await pool.queryParam_Arr(updateWeekdaysQuery, [weekdayNum, scheduleIdx])
-            .catch((err) => {
-                console.log('updateWeekdays err : ' + err);
-
-            })
-    },
     getSchedules: async (scheduleIdx) => {
-        const getSchedulesQuery = `SELECT * FROM schedules LEFT JOIN schedulesPaths ON schedules.scheduleIdx = schedulesPaths.scheduleIdx
-        LEFT JOIN paths ON paths.pathIdx = schedulesPaths.pathIdx WHERE schedules.scheduleIdx = ?`;
-        return await pool.queryParam_Arr(getSchedulesQuery, [scheduleIdx])
-            .catch((err) => {
-                console.log('getSchedulesQuery err : ' + err);
-            })
-    }
+        const getSchedulesQuery = 'SELECT * FROM schedules WHERE scheduleIdx=?'
+        const getNoticeTimeQuery = 'SELECT arriveTime, noticeTime FROM schedulesNotices WHERE scheduleIdx =?'
+        const getStopNameQuery = `SELECT stopName FROM stops WHERE stopIdx IN (
+                                    SELECT stopIdx FROM detailsStops WHERE detailIdx = ?)`;
+        const getDetailQuery = `SELECT * FROM details WHERE detailIdx IN (
+                                    SELECT detailIdx FROM pathsDetails WHERE pathIdx = ?)`;
+        const getPathQuery = `SELECT * FROM paths WHERE pathIdx IN (
+                                SELECT pathIdx FROM schedulesPaths WHERE scheduleIdx=?)`;
+        const getWeekDayQuery = `SELECT weekdayNum FROM weekdays WHERE scheduleIdx = ?`;
+        let returnObj = {};
+        const getSchedulesResult = await pool.queryParam_Arr(getSchedulesQuery, [scheduleIdx]);
+        if(getSchedulesResult.length === 0) {
+            return({code : statCode.BAD_REQUEST, json : resUtil.successFalse(resMsg.NULL_VALUE)});
+        }
+        returnObj.scheduleInfo = getSchedulesResult[0];
+        returnObj.scheduleInfo.scheduleStartDay = returnObj.scheduleInfo.scheduleStartTime.split(' ')[0];
+        returnObj.scheduleInfo.scheduleStartTime = returnObj.scheduleInfo.scheduleStartTime.split(' ')[1];
+        returnObj.weekdayInfo = [];
+        let weekday = await pool.queryParam_Arr(getWeekDayQuery, [scheduleIdx]);
+        for(var i = 0 ; i < weekday.length ; i++) {
+            returnObj.weekdayInfo.push(weekday[i].weekdayNum);
+        }
+        const getNoticeTimeResult = await pool.queryParam_Arr(getNoticeTimeQuery, [scheduleIdx]);
+        returnObj.noticeTime = [];
+        for(var i = 0 ; i < getNoticeTimeResult.length; i++) {
+            returnObj.noticeTime.push(getNoticeTimeResult[i]);
+        }
+        const getPathResult = await pool.queryParam_Arr(getPathQuery, [scheduleIdx]);
+        returnObj.pathInfo = getPathResult[0];
+        const getDetailResult = await pool.queryParam_Arr(getDetailQuery, [getPathResult[0].pathIdx]);
+        returnObj.detailInfo = [];
+        for (var i = 0; i < getDetailResult.length; i++) {
+            returnObj.detailInfo[i] = getDetailResult[i];
+            if (getDetailResult[i].trafficType !== 3) {
+                let getStopResult = await pool.queryParam_Arr(getStopNameQuery, [getDetailResult[i].detailIdx])
+                returnObj.detailInfo[i].stops = [];
+                for (var j = 0; j < getStopResult.length; j++) {
+                    returnObj.detailInfo[i].stops.push(getStopResult[j].stopName);
+                }
+            }
+        }
+        return returnObj;
+    },
 }

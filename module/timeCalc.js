@@ -7,7 +7,6 @@ module.exports = {
     busTime: async (busNo, startTm, stationName, arriveCount, noticeMin ,sectionTime) => {
         console.log('BUS FIRST');
         let getBusRouteListResult = await commonAPI.getBusRouteList(Number(busNo));
-        console.log(getBusRouteListResult);
         if(getBusRouteListResult === undefined) {
             return({
                 code: statCode.BAD_REQUEST,
@@ -39,20 +38,26 @@ module.exports = {
         let arriveArr = [];
         let arriveArrRes = [];
         let noticeArrRes = [];
-
         if (moment(leastTm).hour() < firstBusHour && moment(leastTm).hour() > lastBusHour) {
             console.log('새벽이라 차 없어요');
+            return({
+                code: statCode.BAD_REQUEST,
+                json: resUtil.successFalse(resMsg.FIND_BUS_TIME_FAILED)
+            })
         }
-        if (moment(leastTm).hour() > firstBusHour && moment(leastTm).hour() < lastBusHour) {
+        if (moment(leastTm).hour() > firstBusHour) {
             let tempBusTime = moment(leastTm).hour(firstBusHour).minute(firstBusMin);
-            while (startTm.diff(tempBusTime, 'minutes') > routeTerm) {
+            while (moment(leastTm).diff(tempBusTime, 'minutes') > routeTerm) {
                 let newTime = tempBusTime.add(routeTerm, "m");
                 arriveArr.push(newTime.toString());
             }
-        }
-        for (var l = 1; l <= arriveCount; l++) {
-            arriveArrRes.push(moment(arriveArr[(arriveArr.length) - l]).toString());
-            noticeArrRes.push(moment(arriveArr[(arriveArr.length) - l]).subtract(noticeMin, 'minutes').toString())
+            arriveArrRes.push(moment(arriveArr[(arriveArr.length) - 1]).add(routeTerm, 'm').toString());
+            noticeArrRes.push(moment(arriveArr[(arriveArr.length) - 1]).add(routeTerm-noticeMin, 'm').toString());
+            // 찐막
+            for (var l = 1; l <= arriveCount ; l++) {
+                arriveArrRes.push(moment(arriveArr[(arriveArr.length) - l]).toString());
+                noticeArrRes.push(moment(arriveArr[(arriveArr.length) - l]).subtract(noticeMin, 'minutes').toString())
+            }
         }
         return({
             arriveArr : arriveArrRes,

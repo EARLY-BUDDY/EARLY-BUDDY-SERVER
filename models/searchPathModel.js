@@ -21,11 +21,13 @@ module.exports = {
             for (var j = 0; j < path[i].subPath.length; j++) {
                 if (path[i].subPath[j].trafficType === 3) {
                     totalWalkTime += path[i].subPath[j].sectionTime;
+                    continue;
                 }
                 else {
                     count += 1;
                 }
                 path[i].subPath[j].clicked = false;
+                path[i].subPath[j].lane = path[i].subPath[j].lane[0];
             }
             path[i] = {
                 pathType: path[i].pathType,
