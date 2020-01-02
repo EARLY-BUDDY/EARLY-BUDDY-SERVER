@@ -51,13 +51,14 @@ module.exports = {
                 let newTime = tempBusTime.add(routeTerm, "m");
                 arriveArr.push(newTime.toString());
             }
-
-            for (var l = 1; l <= arriveCount; l++) {
+            arriveArrRes.push(moment(arriveArr[(arriveArr.length) - 1]).add(routeTerm, 'm').toString());
+            noticeArrRes.push(moment(arriveArr[(arriveArr.length) - 1]).add(routeTerm-noticeMin, 'm').toString());
+            // 찐막
+            for (var l = 1; l <= arriveCount ; l++) {
                 arriveArrRes.push(moment(arriveArr[(arriveArr.length) - l]).toString());
                 noticeArrRes.push(moment(arriveArr[(arriveArr.length) - l]).subtract(noticeMin, 'minutes').toString())
             }
         }
-        
         return({
             arriveArr : arriveArrRes,
             noticeArr : noticeArrRes
