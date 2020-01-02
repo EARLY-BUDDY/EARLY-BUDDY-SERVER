@@ -1,10 +1,6 @@
-
-/*1. header jwt 토큰의 유형이나 사용된 해시 알고리즘의 정보
-2. payload 클라이언트에 대한 정보
-3. signature header에서 지정한 알고리즘과 secret key 로 header 와 payload를 담는다.*/
 const randToken = require('rand-token');
 const jwt = require('jsonwebtoken');
-const {secretOrPrivateKey} = require('../config/secretKey');
+const secretOrPrivateKey = require('../config/secretKey').key;
 const options = {
     algorithm: "HS256",
     expiresIn: 60*60*24*30 // 30일

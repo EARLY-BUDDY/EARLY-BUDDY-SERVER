@@ -19,7 +19,6 @@ module.exports = {
                     };
                 }
                 const user = userResult[0];
-                console.log("user: ", user);
                 const { hashed } = await encrypt.encryptWithSalt(password, user.salt);
                 const {token}= jwt.sign(user);
                 if (user.userPw != hashed) {
@@ -30,7 +29,7 @@ module.exports = {
                 }
                 return{
                     code: statusCode.OK,
-                    json:responseUtil.successTrue(resMsg.SIGN_IN_SUCCESS, {jwt: token}),
+                    json:responseUtil.successTrue(resMsg.SIGN_IN_SUCCESS, {jwt: token, userIdx: jwt.verify(token).idx}),
                 }
             })
             .catch(err => {
