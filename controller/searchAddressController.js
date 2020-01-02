@@ -31,7 +31,6 @@ module.exports = {
             return;
         }
         for (var i = 0; i < result.documents.length; i++) {
-            console.log(result.documents[i]);
             if(result.documents[i].road_address == null) {
                 result.documents[i] = {
                     addressName: result.documents[i].address.address_name,
@@ -43,7 +42,7 @@ module.exports = {
             }
             console.log('here');
             result.documents[i] = {
-                addressName: result.documents[i].address.address_name,
+                addressName: result.documents[i].address_name,
                 roadAddressName: result.documents[i].road_address.address_name,
                 x: result.documents[i].x,
                 y: result.documents[i].y
