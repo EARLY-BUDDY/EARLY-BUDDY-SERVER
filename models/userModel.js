@@ -11,7 +11,6 @@ module.exports = {
         const query = `SELECT * FROM ${table} WHERE userId ='${id}'`;
         return await pool.queryParam_None(query)
             .then(async (userResult) => {
-                console.log("userResult : ", userResult);
                 if (userResult.length == 0) {
                     return {
                         code: statusCode.BAD_REQUEST,
@@ -29,7 +28,7 @@ module.exports = {
                 }
                 return{
                     code: statusCode.OK,
-                    json:responseUtil.successTrue(resMsg.SIGN_IN_SUCCESS, {jwt: token, userIdx: jwt.verify(token).idx}),
+                    json:responseUtil.successTrue(resMsg.SIGN_IN_SUCCESS, {jwt: token, userIdx: jwt.verify(token).idx, userName : userResult[0].userName}),
                 }
             })
             .catch(err => {
@@ -150,5 +149,12 @@ module.exports = {
             console.log(err);
             throw err;
         }
-    }
+    },
+    getDeviceToken: async (userIdx) => {
+        const getDeviceToken = `SELECT deviceToken FROM users WHERE userIdx = ?`
+        return await pool.queryParam_Arr(getDeviceToken, [userIdx])
+            .catch((err) => {
+                console.log('getDeviceToken err : ' + err);
+            })
+    },
 }

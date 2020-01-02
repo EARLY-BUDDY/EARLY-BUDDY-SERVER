@@ -1,19 +1,23 @@
 var admin = require("firebase-admin");
 const firebaseConfig = require("../config/firebaseConfig");
 var schedule = require('node-schedule');
+var moment = require('moment');
 
 const alarm = {
-    setSchedule: async (scheduleIdxs, registerToken, dates) => {
+    setSchedule: async (registerToken, dates, alarmFlag) => {
         const scheduleNames = [];
         for (var i = 0; i < dates.length; i++) {
-            let year = Number(dates[i].split(' ')[0].split('-')[0]);
-            let month = Number(dates[i].split(' ')[0].split('-')[1]);
-            let day = Number(dates[i].split(' ')[0].split('-')[2]);
-            let hour = Number(dates[i].split(' ')[1].split(':')[0]);
-            let min = Number(dates[i].split(' ')[1].split(':')[1]);
-            var date = new Date(year, month, day, hour, min);
-            const scheduleModel = await schedule.scheduleJob(date, function () {
-                alarm.message(registerToken, dates[i].length - i);
+            // let year = Number(dates[i].split(' ')[0].split('-')[0]);
+            // let month = Number(dates[i].split(' ')[0].split('-')[1]);
+            // let day = Number(dates[i].split(' ')[0].split('-')[2]);
+            // let hour = Number(dates[i].split(' ')[1].split(':')[0]);
+            // let min = Number(dates[i].split(' ')[1].split(':')[1]);
+            // var date = new Date(year, month, day, hour, min);
+            const scheduleModel = await schedule.scheduleJob(moment().format('YYYY-MM-DD HH:mm'), function () {
+                alarm.message(registerToken, alarmFlag);
+                setInterval(() => {
+                    console.log('set schedule~~');
+                }, 500);
             });
             await scheduleNames.push(scheduleModel.name);
         }
@@ -29,7 +33,7 @@ const alarm = {
             body = body + "이제 긴장해!";
         } else if (alarmFlag == 2) {
             body = body + "슬슬 준비해!";
-        } else if (alarmFlag == 3) {
+        } else if (alarmFlag >= 3) {
             body = body + "천천히 해~";
         } else if (alarmFlag == 0) {
             body = "이거 못타면 정말 지각이야!";
