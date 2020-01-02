@@ -5,6 +5,7 @@ const pool = require('../module/pool');
 const schedules = require('../models/schedulesModel');
 const odsayAPI = require('../module/odsayAPI');
 const timeCalc = require('../module/timeCalc');
+const users = require('../models/userModel');
 var moment = require('moment');
 const alarm = require('../module/alarm');
 
@@ -17,7 +18,7 @@ module.exports = {
         try {
             let addScheduleResult = await schedules.addSchedule(body.scheduleName, startTime, body.startAddress, body.startLongitude, body.startLatitude, body.endAddress, body.endLongitude, body.endLatitude, body.noticeMin, body.arriveCount);
             let addPathsResult = await schedules.addPaths(body.path.pathType, body.path.totalTime, body.path.totalPay, body.path.totalWalkTime, body.path.transitCount, subPath[1].startName);
-            
+            let deviceToken = await users.getDeviceToken(body.userIdx);
             for (var i = 0; i < subPath.length; i++) {
                 if (subPath[i].trafficType === 1) {
                     let stopArray = subPath[i].passStopList.stations;
@@ -35,6 +36,7 @@ module.exports = {
                         await schedules.addTime(moment(subTime.arriveArr[k]).format('YYYY-MM-DD HH:mm'), moment(subTime.noticeArr[k]).format('YYYY-MM-DD HH:mm'), addScheduleResult.insertId);
                         console.log(k + 1 + ' 번째 지하철 알림시간 추가 완료');
                     }
+                    //TODO await alarm.setSchedule(deviceToken, moment(subTime.noticeArr[k]).format('YYYY-MM-DD HH:mm'), body.arriveCount);
                     if (addSubwayResult != true) {
                         throw ({ code: addSubwayResult.code, json: addSubwayResult.json });
                     }

@@ -76,8 +76,9 @@ module.exports = {
     },
     addTime: async (arriveTime, noticeTime, scheduleIdx) => {
         const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
-        return await pool.Transaction((conn) => {
-            conn.query(addSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime]);
+        return await pool.Transaction(async(conn) => {
+            await conn.query(addSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime]);
+            await Alarm.setSchedule(scheduleIdx, )
         })
     },
     addUsersSchedules: async (userIdx, scheduleIdx) => { //RT
@@ -189,14 +190,15 @@ module.exports = {
         const getPathResult = await pool.queryParam_Arr(getPathQuery, [scheduleIdx]);
         returnObj.path = getPathResult[0];
         const getDetailResult = await pool.queryParam_Arr(getDetailQuery, [getPathResult[0].pathIdx]);
-        returnObj.detailInfo = [];
+        returnObj.path.subPath = [];
         for (var i = 0; i < getDetailResult.length; i++) {
-            returnObj.detailInfo[i] = getDetailResult[i];
+            getDetailResult[i].clicked = false;
+            returnObj.path.subPath[i] = getDetailResult[i];
             if (getDetailResult[i].trafficType !== 3) {
                 let getStopResult = await pool.queryParam_Arr(getStopNameQuery, [getDetailResult[i].detailIdx])
-                returnObj.detailInfo[i].stops = [];
+                returnObj.path.subPath[i].stops = [];
                 for (var j = 0; j < getStopResult.length; j++) {
-                    returnObj.detailInfo[i].stops.push(getStopResult[j].stopName);
+                    returnObj.path.subPath[i].stops.push(getStopResult[j].stopName);
                 }
             }
         }
