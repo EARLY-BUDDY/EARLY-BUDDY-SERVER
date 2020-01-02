@@ -5,6 +5,7 @@ const User = require('../models/userModel');
 const encrypt = require('../module/encryption');
 const express = require('express');
 
+
 module.exports = {
     //로그인
     signin : async (req,res) =>{
@@ -22,12 +23,44 @@ module.exports = {
         }
     },
     setUserName : async (req,res) =>{
+        const userIdx = req.decoded.idx;
         const {userName}= req.body;
-        const  missParameters = await Object.entries({userName}).filter(it=>it[1]==undefined).map(it=>it[0]).join(',');
         if(!userName){
-            await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(`${resMsg.NULL_VALUE} ${missParameters}`))
+            return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(`userName ${resMsg.NULL_VALUE}`));
         }
-
+        //닉네임 중복 체크
+        const checkNameResult = await User.checkName(userName);
+        if (!checkNameResult ){
+            return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(resMsg.ALREADY_NAME)); 
+        } 
+        try{
+            const {code, json} = await User.setUserName(userName,userIdx);
+            return res.status(code).send(json);
+        } catch (err) {
+            return await res.status(statusCode.INTERNAL_SERVER_ERROR).send(responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR));
+        }
+    },
+    setFavorite : async (req,res) =>{
+        console.log(userIdx);
+        const {favoriteInfo,favoriteCategory,favoriteLongitude,favoriteLatitude}= req.body;
+        for(i = 0;i<favoriteCategory.length;i++){
+            const {favorite} = (favoriteInfo[i], favoriteCategory[i], favoriteLongitude[i], favoriteLatitude[i]);
+            await userModel.INSERT({favorite});
+        }
+        console.log("req body : ",req.body);
+        
+        if(!favoriteInfo||!favoriteCategory||!favoriteLongitude||!favoriteLatitude){
+            const missParameters = await Object.entries({favoriteInfo,favoriteCategory,favoriteLongitude,favoriteLatitude}).filter(it=>it[1]==undefined).map(it=>it[0]).join(',');
+            return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(`favoriteIdx ${missParameters} ${resMsg.NULL_VALUE}`));
+        }
+        try{
+            const {code, json} = await User.setUserFavorite(favoriteInfo,favoriteCategory,favoriteLongitude,favoriteLatitude,userIdx);
+            console.log(code);
+            console.log(json);
+            return res.status(code).send(json);
+        } catch (err) {
+            return await res.status(statusCode.INTERNAL_SERVER_ERROR).send(responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR));
+        }
     },
     signup : async (req,res) =>{
         const {userId, userPw} = req.body;

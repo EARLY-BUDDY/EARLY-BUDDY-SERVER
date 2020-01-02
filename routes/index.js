@@ -12,6 +12,7 @@ router.use('/calenders', require('./calenders'));
 router.use('/searchPath', require('./searchPath'));
 router.use('/messages', require('./messages'));
 router.use('/home', require('./home'));
+//router.use('/myPage', require('./myPage'));
 
 
 module.exports = router;

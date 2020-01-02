@@ -1,9 +1,12 @@
-const express = require('express');
+/*const express = require('express');
 const router = express.Router();
 const myPageController = require('../controller/myPageController');
+const authUtil  =require('../module/authUtil');
 
-router.post('/changeNickName', myPageController.changeNickName);
-router.post('/getUserId', myPageController.outputId);
+router.post('/changeNickName',authUtil.checkToken, myPageController.changeNickName);
+router.post('/getUserId',authUtil.checkToken, myPageController.getUserId);
 router.post('/changePw', myPageController.changePw);
-router.post('/changeFavorite',myPageController.changeFavorite);
+router.post('/changeFavorite',authUtil.checkToken,myPageController.changeFavorite);
 router.post('/withdrawal', myPageController.withdrawal);
+
+module.exports = router;*/
