@@ -7,10 +7,9 @@ const express = require('express');
 
 
 module.exports = {
-    //로그인
+    //1. 로그인
     signin : async (req,res) =>{
         const {userId, userPw, deviceToken} = req.body;
-        //아이디나 비번이 입력이 안됐다면
         if(!userId || !userPw || !deviceToken){
             return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(resMsg.NULL_VALUE)); 
         }
@@ -22,13 +21,13 @@ module.exports = {
             await res.status(statusCode.INTERNAL_SERVER_ERROR).send(responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR));
         }
     },
+    //2. 닉네임 설정
     setUserName : async (req,res) =>{
         const userIdx = req.decoded.idx;
         const {userName}= req.body;
         if(!userName){
             return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(`userName ${resMsg.NULL_VALUE}`));
         }
-        //닉네임 중복 체크
         const checkNameResult = await User.checkName(userName);
         if (!checkNameResult ){
             return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(resMsg.ALREADY_NAME)); 
@@ -40,6 +39,7 @@ module.exports = {
             return await res.status(statusCode.INTERNAL_SERVER_ERROR).send(responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR));
         }
     },
+    //3. 자주가는 장소 설정
     setFavorite : async (req,res) =>{
         const {favoriteInfo, favoriteCategory, favoriteLongitude, favoriteLatitude}= req.body;
         const userIdx = req.decoded.idx;
@@ -54,18 +54,17 @@ module.exports = {
             return await res.status(statusCode.INTERNAL_SERVER_ERROR).send(responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR));
         }
     },
+    //4. 회원가입
     signup : async (req,res) =>{
         const {userId, userPw} = req.body;
         const missParameters = await Object.entries({userId, userPw}).filter(it=>it[1]==undefined).map(it=>it[0]).join(',');
         if(!userId || !userPw){
             return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(`${resMsg.NULL_VALUE} ${missParameters}`));
         }
-        // 아이디 중복 체크
         const checkIdResult = await User.checkId(userId);
         if (!checkIdResult ){
             return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(resMsg.ALREADY_ID)); 
         } 
-        // 비밀번호 암호화 
         try{
             const {hashed, salt} = await encrypt.encrypt(userPw)
             const {code, json} =await User.signup(userId, hashed, salt)

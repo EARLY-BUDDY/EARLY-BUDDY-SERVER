@@ -38,7 +38,7 @@ node_modules/
 jspm_packages/
 *.pem
 *.ppk
-**/jwt.js
+
 
 # TypeScript v1 declaration files
 typings/
