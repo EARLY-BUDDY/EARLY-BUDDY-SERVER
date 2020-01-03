@@ -44,6 +44,7 @@ module.exports = {
 
     NO_USER: '존재하지 않는 유저입니다',
     GET_HOME_SCHEDULE_SUCCESS: '홈 화면 일정 조회 성공',
+    NO_HOME_SCHEDULE : '홈 화면에 보여줄 일정이 없습니다',
     FIND_TRANS_FAILED : '경로에 교통수단이 없습니다',
 
     //KAKAO

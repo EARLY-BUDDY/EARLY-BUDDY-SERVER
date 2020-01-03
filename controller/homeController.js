@@ -84,7 +84,7 @@ module.exports = {
 
             // 화면에 보여줄 교통 수단이 없으므로 nul을 return 
             if(currentTransIdx == -1){
-                res.status(statusCode.OK).send(resUtil.successTrue(resMsg.GET_HOME_SCHEDULE_SUCCESS, null));
+                res.status(statusCode.OK).send(resUtil.successTrue(resMsg.NO_HOME_SCHEDULE, null));
                 return;
             }
 
@@ -100,7 +100,7 @@ module.exports = {
             }
 
             var noticeTime = moment(scheduleNoticeList[currentTransIdx].noticeTime, 'YYYY-MM-DD HH:mm:ss');
-            // 제일 빠른 교톧수단의 알림시간이 아직 지나지 않았을 때 ready = false
+            // 제일 빠른 교통수단의 알림시간이 아직 지나지 않았을 때 ready = false
             if(noticeTime > currentDate|| transCount < 0){
                 var data = {
                     ready : false,
