@@ -12,12 +12,14 @@ const alarm = require('../module/alarm');
 module.exports = {
     addSchedule: async (req, res) => {
         let body = req.body;
-        let subPath = body.path.subPath;
+        console.log(body.path);
+        let path = JSON.parse(body.path);
+        let subPath = path.subPath;
         let startTime = body.scheduleStartDay + ' ' + body.scheduleStartTime;
         let startTm = moment(startTime, 'YYYY-MM-DD HH:mm')
         try {
             let addScheduleResult = await schedules.addSchedule(body.scheduleName, startTime, body.startAddress, body.startLongitude, body.startLatitude, body.endAddress, body.endLongitude, body.endLatitude, body.noticeMin, body.arriveCount);
-            let addPathsResult = await schedules.addPaths(body.path.pathType, body.path.totalTime, body.path.totalPay, body.path.totalWalkTime, body.path.transitCount, subPath[1].startName);
+            let addPathsResult = await schedules.addPaths(path.pathType, path.totalTime, path.totalPay, path.totalWalkTime, path.transitCount, subPath[1].startName);
             let deviceToken = await users.getDeviceToken(body.userIdx);
             for (var i = 0; i < subPath.length; i++) {
                 if (subPath[i].trafficType === 1) {
@@ -25,8 +27,8 @@ module.exports = {
                     let addSubwayResult = await schedules.addSubway(1, subPath[i].distance, subPath[i].sectionTime, subPath[i].stationCount, subPath[i].lane.subwayCode, subPath[i].startName, subPath[i].startX, subPath[i].startY, subPath[i].endName, subPath[i].endX, subPath[i].endY, stopArray, addPathsResult.insertId);
                     if (addSubwayResult === false) throw ({ code: addBusResult.code, json: addBusResult.json });
                     if (i !== 1) continue;
-                    
                     let subTime = await timeCalc.subwayTime(startTm, stopArray[0].stationID, subPath[i].wayCode, body.noticeMin, body.arriveCount, subPath[i].sectionTime);
+                    console.log(subTime);
                     if (subTime.code === statCode.BAD_REQUEST) throw (subTime);
                     for (var k = 0; k < body.arriveCount; k++) {
                         if(body.noticeMin === 0) {
@@ -48,6 +50,7 @@ module.exports = {
                     if (addBusResult === false) throw ({ code: addBusResult.code, json: addBusResult.json });
                     if (i !== 1) continue;
                     let busTime = await timeCalc.busTime(subPath[i].lane.busNo, startTm, subPath[i].startName, body.arriveCount, body.noticeMin, subPath[i].sectionTime)
+                    console.log(busTime);
                     if (busTime.code === statCode.BAD_REQUEST) throw (busTime);
                     for (var k = 0; k < body.arriveCount + 1; k++) {
                         if(body.noticeMin === 0) {
@@ -119,13 +122,15 @@ module.exports = {
         } // ! 1st : body에서 받은 scheduleIdx로 DB 조회
 
         let body = req.body;
-        let subPath = body.path.subPath;
+        let path = JSON.parse(body.path);
+        console.log(path);
+        let subPath = path.subPath;
         let startTime = body.scheduleStartDay + ' ' + body.scheduleStartTime;
         let startTm = moment(startTime, 'YYYY-MM-DD HH:mm')
         try {
             await schedules.deleteSchedule(scheduleIdx);
             let addScheduleResult = await schedules.addSchedule(body.scheduleName, startTime, body.startAddress, body.startLongitude, body.startLatitude, body.endAddress, body.endLongitude, body.endLatitude, body.noticeMin, body.arriveCount);
-            let addPathsResult = await schedules.addPaths(body.path.pathType, body.path.totalTime, body.path.totalPay, body.path.totalWalkTime, body.path.transitCount, subPath[1].startName);
+            let addPathsResult = await schedules.addPaths(path.pathType, path.totalTime, path.totalPay, path.totalWalkTime, path.transitCount, subPath[1].startName);
             
             for (var i = 0; i < subPath.length; i++) {
                 if (subPath[i].trafficType === 1) {

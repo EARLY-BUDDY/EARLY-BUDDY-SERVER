@@ -11,9 +11,7 @@ module.exports = {
         }
         let result = await kakaoAPI.find(req.query.addr);
         let keywordResult = await kakaoAPI.findByKeyword(req.query.addr);
-        console.log('result 수 : ' + result.documents.length);
-        console.log('keywordResult 수 : ' + keywordResult.documents.length);
-        if (result.meta.total_count === 0 && keywordResult.meta.total_count === 0) {
+        if (result.meta === undefined && keywordResult.meta === undefined) {
             res.status(statCode.BAD_REQUEST).send(resUtil.successFalse(resMsg.FIND_ADDRESS_FAILED))
             return;
         }

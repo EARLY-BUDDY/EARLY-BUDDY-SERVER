@@ -69,10 +69,10 @@ module.exports = {
                         }
                     }
                 }
-                else if(subPath[i].trafficType === 1) {
-                    let subTimeResult = await seoulAPI.realtimeStArr(subPath[i].detailStartAddress);
-                    console.log(subTimeResult);
-                }
+                // else if(subPath[i].trafficType === 1) {
+                //     let subTimeResult = await seoulAPI.realtimeStArr(subPath[i].detailStartAddress);
+                //     console.log(subTimeResult);
+                // }
             }
             // 해당 일정이 없으면 null 반환
             if (scheduleIdx == -1 || userSchedule.length == 0) {

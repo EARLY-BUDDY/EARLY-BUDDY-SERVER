@@ -15,6 +15,12 @@ module.exports = {
             })
         }
         let path = result.path;
+        if(path === undefined) {
+            return({
+                code: statCode.BAD_REQUEST,
+                json: resUtil.successFalse(resMsg.FIND_PATH_FAILED)
+            })
+        }
         let totalWalkTime = 0;
         let count = 0;
         for (var i = 0; i < path.length; i++) {
