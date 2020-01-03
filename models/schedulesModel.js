@@ -44,6 +44,7 @@ module.exports = {
             for (var j = 0; j < stopArray.length; j++) {
                 let addBusStopsResult = await conn.query(addBusStopsQuery, [stopArray[j].stationName]);
                 let addBusDetailsStopsResult = await conn.query(addBusDetailsStopsQuery, [addBusDetailResult.insertId, addBusStopsResult.insertId]);
+                console.log(addBusDetailsStopsResult);
             }
             
             console.log('********************');

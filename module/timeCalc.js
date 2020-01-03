@@ -68,6 +68,7 @@ module.exports = {
         let leastTm = startTm.subtract(sectionTime, 'm').toString();
         console.log('least : ' + leastTm);
         let getSubwayArriveTimeResult = await odsayAPI.getSubwayArriveTime(stationID, wayCode);
+        console.log(getSubwayArriveTimeResult);
         if (getSubwayArriveTimeResult === undefined) {
             return ({
                 code: statCode.BAD_REQUEST,

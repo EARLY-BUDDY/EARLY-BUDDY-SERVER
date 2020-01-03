@@ -4,6 +4,7 @@ module.exports = {
     
     // 유저
     ALREADY_ID : "이미 사용중인 아이디입니다.",
+    USABLE_ID : "사용 가능한 아이디입니다.",
     MISS_MATCH_PW: "잘못된 비밀번호입니다.",
     SET_NAME_SUCCESS: "닉네임 등록 성공",
     ALREADY_NAME : "이미 사용중인 닉네임입니다.",
@@ -12,12 +13,8 @@ module.exports = {
     // 마이페이지
     CHANGE_NAME_SUCCESS : "닉네임이 수정되었습니다.",
     ALREADY_FAVORITE : "이미 지정된 자주가는 장소 입니다.",
-
-
-
-
-
-
+    GET_FAVORITE_SUCCESS : '자주 가는 장소 가져오기 완료',
+    GET_FAVORITE_SUCCESS_NO_VALUE : '등록된 자주 가는 장소가 없습니다.',
 
     NO_CHANGE: '변경된 사항이 없습니다.',
 
