@@ -32,6 +32,9 @@
 ## Work Flow
 https://github.com/EARLY-BUDDY/EARLY-BUDDY-SERVER/files/4018310/default.pdf
 ## ERD diagram
+
+![erd](https://user-images.githubusercontent.com/55784772/71729588-7bc01200-2e83-11ea-9350-617be7742f28.png)
+
 ## 서버 아키텍처
 ## 주요 기능 설명
 **일정 등록**
