@@ -30,9 +30,19 @@
   }
   ```
 ## Work Flow
+https://github.com/EARLY-BUDDY/EARLY-BUDDY-SERVER/files/4018310/default.pdf
 ## ERD diagram
 ## 서버 아키텍처
 ## 주요 기능 설명
+**일정 등록**
+1 나만의 일정을 등록(출발 및 도착 장소와 날짜 및 시간까지)
+2 설정한 약속 시간까지 늦지 않기 위하여 마지막으로 꼭 타야만 하는 버스 기준으로 몇 대 전부터 해당 버스에 대한 알림을 받을지를 설정
+-3 위에서 설정한 버스에 대한 알림을 버스가 정류장에 도착하기 몇 분 전부터 알림을 받을지를 설정(푸쉬 알림으로 받음)
+**푸쉬 알림**
+* 일정 등록 시 설정해 놓은 시간에 따라서 내가 타야 하는 버스에 대한 알림을 받음
+- → 버스 타야 하는 시간에 계속 배차를 일일이 확인하던 불편함 해소 
+**캘린더 기능**
+* 캘린더를 통하여 내가 등록한 일정을 한 눈에 파악 가능
 
 ## 시작하기
 모든 소스코드는 vscode+ Windows10/MAC + Node.js 10 환경에서 작성되었습니다.
@@ -94,14 +104,12 @@ pm2 moni t --name "앱 이름"
 * [multer](https://github.com/expressjs/multer)
 * [moment](https://momentjs.com/)
 
-## 참여자
-* [심정욱](https://github.com/SimJungUk)
-* [박경선](https://github.com/gngsn)
-* [양시연](https://github.com/ssionii)
-* [손예지](https://github.com/yezgoget)
+## 참여자 +  역할분담
+* [심정욱](https://github.com/SimJungUk) - 길찾기 API, 일정 등록, 일정 조회, 일정 수정
+* [박경선](https://github.com/gngsn) -알림(fcm), 일정 확인 ,일정 업데이트 / 삭제
+* [양시연](https://github.com/ssionii) - 홈 , 캘린더
+* [손예지](https://github.com/yezgoget)- 유저, 마이페이지, ReadME
 * [기여자 목록](https://github.com/EARLY-BUDDY/EARLY-BUDDY-SERVER/graphs/contributors)을 확인하여 이 프로젝트에 참가하신 분들을 확인할 수 있습니다.
-
-## 참여자 
 
 ## EARLY-BUDDY의 다른 프로젝트
 * [ANDROID](https://github.com/EARLY-BUDDY/EARLY-BUDDY-ANDROID)
