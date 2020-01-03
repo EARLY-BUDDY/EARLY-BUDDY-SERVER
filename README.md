@@ -30,6 +30,9 @@
   }
   ```
 ## Work Flow
+## ERD diagram
+## 서버 아키텍처
+## 주요 기능 설명
 
 ## 시작하기
 모든 소스코드는 vscode+ Windows10/MAC + Node.js 10 환경에서 작성되었습니다.
@@ -89,13 +92,17 @@ pm2 moni t --name "앱 이름"
 * [Async & Await](https://www.npmjs.com/package/async)
 * [JWT(JsonWebToken)](https://www.npmjs.com/package/jsonwebtoken)
 * [multer](https://github.com/expressjs/multer)
-## 개발자
+* [moment](https://momentjs.com/)
+
+## 참여자
 * [심정욱](https://github.com/SimJungUk)
 * [박경선](https://github.com/gngsn)
 * [양시연](https://github.com/ssionii)
 * [손예지](https://github.com/yezgoget)
 * [기여자 목록](https://github.com/EARLY-BUDDY/EARLY-BUDDY-SERVER/graphs/contributors)을 확인하여 이 프로젝트에 참가하신 분들을 확인할 수 있습니다.
-- 
+
+## 참여자 
+
 ## EARLY-BUDDY의 다른 프로젝트
 * [ANDROID](https://github.com/EARLY-BUDDY/EARLY-BUDDY-ANDROID)
 * [IOS](https://github.com/EARLY-BUDDY/EARLYBUDDY-iOS)
