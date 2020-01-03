@@ -80,7 +80,7 @@ pm2 moni t --name "앱 이름"
 * [Express.js](http://expressjs.com/ko/) - Node.js 웹 애플리케이션 프레임워크
 * [NPM](https://rometools.github.io/rome/)  - 자바 스크립트 패키지 관리자 
 * [PM2](https://pm2.keymetrics.io/]) - Express 앱용 프로세스 관리자
-* [vscode(]https://code.visualstudio.com/)  - 편집기
+* [vscode](https://code.visualstudio.com/)  - 편집기
 * [Mysql](https://www.mysql.com/) - DataBase
 * [AWS EC2](https://aws.amazon.com/ko/ec2/?sc_channel=PS&sc_campaign=acquisition_KR&sc_publisher=google&sc_medium=english_ec2_b&sc_content=ec2_e&sc_detail=aws%20ec2&sc_category=ec2&sc_segment=177228231544&sc_matchtype=e&sc_country=KR&s_kwcid=AL!4422!3!177228231544!e!!g!!aws%20ec2&ef_id=WkRozwAAAnO-lPWy:20180412120123:s) - 클라우드 환경 컴퓨팅 시스템
 * [AWS RDS](https://aws.amazon.com/ko/rds/) - 클라우드 환경 데이터베이스 관리 시스템
