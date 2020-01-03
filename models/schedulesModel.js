@@ -21,10 +21,10 @@ module.exports = {
 
             })
     },
-    addWalk: (trafficType, distance, sectionTime, pathIdx) => {
+    addWalk: async (trafficType, distance, sectionTime, pathIdx) => {
         const addWalkDetailQuery = 'INSERT INTO details (trafficType, distance, sectionTime) VALUES (?,?,?)'; //walk = 3 subway = 1, bus = 2
         const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
-        return pool.Transaction(async (conn) => {
+        return await pool.Transaction(async (conn) => {
             let addWalkDetailResult = await conn.query(addWalkDetailQuery, [trafficType, distance, sectionTime]);
             let addWalkPathsDetailsResult = await conn.query(addPathsDetailsQuery, [pathIdx, addWalkDetailResult.insertId]);
             console.log('********************');
@@ -33,18 +33,19 @@ module.exports = {
 
         })
     },
-    addBus: (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType, stopArray, pathIdx) => {
+    addBus: async (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType, stopArray, pathIdx) => {
         const addBusDetailQuery = 'INSERT INTO details (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)';
         const addBusDetailsStopsQuery = 'INSERT INTO detailsStops (detailIdx, stopIdx) VALUES (?,?)';//RT
         const addBusStopsQuery = 'INSERT INTO stops (stopName) VALUES (?)';
         const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
-        return pool.Transaction(async (conn) => {
+        return await pool.Transaction(async (conn) => {
             let addBusDetailResult = await conn.query(addBusDetailQuery, [trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType]);
+            let addBusPathsDetailsResult = await conn.query(addPathsDetailsQuery, [pathIdx, addBusDetailResult.insertId]);
             for (var j = 0; j < stopArray.length; j++) {
                 let addBusStopsResult = await conn.query(addBusStopsQuery, [stopArray[j].stationName]);
                 let addBusDetailsStopsResult = await conn.query(addBusDetailsStopsQuery, [addBusDetailResult.insertId, addBusStopsResult.insertId]);
             }
-            let addBusPathsDetailsResult = await conn.query(addPathsDetailsQuery, [pathIdx, addBusDetailResult.insertId]);
+            
             console.log('********************');
             console.log('버스 추가 완료');
             console.log('********************');
@@ -57,18 +58,18 @@ module.exports = {
                 })
             })
     },
-    addSubway: (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, stopArray, pathIdx) => {
+    addSubway: async (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, stopArray, pathIdx) => {
         const addSubwayDetailQuery = 'INSERT INTO details (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
         const addSubwayStopsQuery = 'INSERT INTO stops (stopName) VALUES (?)';
         const addSubwayDetailsStopsQuery = 'INSERT INTO detailsStops (detailIdx, stopIdx) VALUES (?,?)';//RT
         const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
-        return pool.Transaction(async (conn) => {
+        return await pool.Transaction(async (conn) => {
             let addSubwayDetailResult = await conn.query(addSubwayDetailQuery, [trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude]);
+            await conn.query(addPathsDetailsQuery, [pathIdx, addSubwayDetailResult.insertId]);
             for (var i = 0; i < stopArray.length; i++) {
                 let addSubwayStopsResult = await conn.query(addSubwayStopsQuery, [stopArray[i].stationName]);
                 let addSubwayDetailsStopsResult = await conn.query(addSubwayDetailsStopsQuery, [addSubwayDetailResult.insertId, addSubwayStopsResult.insertId]);
             }
-            await conn.query(addPathsDetailsQuery, [pathIdx, addSubwayDetailResult.insertId]);
             console.log('********************');
             console.log(' 지하철 추가 완료');
             console.log('********************')
