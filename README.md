@@ -28,23 +28,23 @@
     "urlencode": "^1.1.0",
     "xml2js": "^0.4.23"
   }
-  ```
+```
 
 ## ERD diagram
 
 ![erd](https://user-images.githubusercontent.com/55784772/71729588-7bc01200-2e83-11ea-9350-617be7742f28.png)
 
 ## 서버 아키텍처
-![arch](https://user-images.githubusercontent.com/55784772/71729595-7fec2f80-2e83-11ea-8e80-3cd2ec892885.png)
+![earlybuddy architecture](https://user-images.githubusercontent.com/44252639/71857849-5c97dd80-312c-11ea-880b-93ef0fdc8ca6.png)
 
 ## 주요 기능 설명
 **일정 등록**
 * 1 나만의 일정을 등록(출발 및 도착 장소와 날짜 및 시간까지)
 * 2 설정한 약속 시간까지 늦지 않기 위하여 마지막으로 꼭 타야만 하는 버스 기준으로 몇 대 전부터 해당 버스에 대한 알림을 받을지를 설정
-* 3 위에서 설정한 버스에 대한 알림을 버스가 정류장에 도착하기 몇 분 전부터 알림을 받을지를 설정(푸쉬 알림으로 받음)
+* -3 위에서 설정한 버스에 대한 알림을 버스가 정류장에 도착하기 몇 분 전부터 알림을 받을지를 설정(푸쉬 알림으로 받음)
 **푸쉬 알림**
 * 일정 등록 시 설정해 놓은 시간에 따라서 내가 타야 하는 버스에 대한 알림을 받음
-* → 버스 타야 하는 시간에 계속 배차를 일일이 확인하던 불편함 해소 
+* - → 버스 타야 하는 시간에 계속 배차를 일일이 확인하던 불편함 해소 
 **캘린더 기능**
 * 캘린더를 통하여 내가 등록한 일정을 한 눈에 파악 가능
 
@@ -101,7 +101,7 @@ pm2 moni t --name "앱 이름"
 * [Mysql](https://www.mysql.com/) - DataBase
 * [AWS EC2](https://aws.amazon.com/ko/ec2/?sc_channel=PS&sc_campaign=acquisition_KR&sc_publisher=google&sc_medium=english_ec2_b&sc_content=ec2_e&sc_detail=aws%20ec2&sc_category=ec2&sc_segment=177228231544&sc_matchtype=e&sc_country=KR&s_kwcid=AL!4422!3!177228231544!e!!g!!aws%20ec2&ef_id=WkRozwAAAnO-lPWy:20180412120123:s) - 클라우드 환경 컴퓨팅 시스템
 * [AWS RDS](https://aws.amazon.com/ko/rds/) - 클라우드 환경 데이터베이스 관리 시스템
-
+* [AWS S3](https://aws.amazon.com/ko/s3/?sc_channel=PS&sc_campaign=acquisition_KR&sc_publisher=google&sc_medium=english_s3_b&sc_content=s3_e&sc_detail=aws%20s3&sc_category=s3&sc_segment=177211245240&sc_matchtype=e&sc_country=KR&s_kwcid=AL!4422!3!177211245240!e!!g!!aws%20s3&ef_id=WkRozwAAAnO-lPWy:20180412120059:s]) - 클라우드 환경 데이터 저장소
 ## 사용 모듈
 * [Async & Await](https://www.npmjs.com/package/async)
 * [JWT(JsonWebToken)](https://www.npmjs.com/package/jsonwebtoken)
@@ -113,7 +113,7 @@ pm2 moni t --name "앱 이름"
 * [박경선](https://github.com/gngsn) -알림(fcm), 일정 확인 ,일정 업데이트 / 삭제
 * [양시연](https://github.com/ssionii) - 홈 , 캘린더
 * [손예지](https://github.com/yezgoget)- 유저, 마이페이지, ReadME
-* [기여자 목록](https://github.com/EARLY-BUDDY/EARLY-BUDDY-SERVER/graphs/contributors)
+* [기여자 목록](https://github.com/EARLY-BUDDY/EARLY-BUDDY-SERVER/graphs/contributors)을 확인하여 이 프로젝트에 참가하신 분들을 확인할 수 있습니다.
 
 ## EARLY-BUDDY의 다른 프로젝트
 * [ANDROID](https://github.com/EARLY-BUDDY/EARLY-BUDDY-ANDROID)
