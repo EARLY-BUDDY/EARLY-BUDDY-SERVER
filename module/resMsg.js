@@ -38,6 +38,7 @@ module.exports = {
     WRONG_FLAG: 'alarmFlag가 범위에서 벗어났습니다.',
 
     SERVER_ERROR: '서버 내부 오류입니다.',
+    NO_HOME_SCHEDULE : '홈 화면에 보여줄 일정이 없습니다',
 
     NO_USER: '존재하지 않는 유저입니다',
     GET_HOME_SCHEDULE_SUCCESS: '홈 화면 일정 조회 성공',

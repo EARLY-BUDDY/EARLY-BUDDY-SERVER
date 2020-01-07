@@ -44,7 +44,6 @@ module.exports = {
             for (var j = 0; j < stopArray.length; j++) {
                 let addBusStopsResult = await conn.query(addBusStopsQuery, [stopArray[j].stationName]);
                 let addBusDetailsStopsResult = await conn.query(addBusDetailsStopsQuery, [addBusDetailResult.insertId, addBusStopsResult.insertId]);
-                console.log(addBusDetailsStopsResult);
             }
             
             console.log('********************');
@@ -80,7 +79,7 @@ module.exports = {
         const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
         return await pool.Transaction(async(conn) => {
             await conn.query(addSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime]);
-            await Alarm.setSchedule(scheduleIdx, )
+            //await Alarm.setSchedule(scheduleIdx, )
         })
     },
     addUsersSchedules: async (userIdx, scheduleIdx) => { //RT

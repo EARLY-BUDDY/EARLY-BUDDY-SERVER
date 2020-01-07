@@ -6,7 +6,9 @@ module.exports = {
         const getUserScheduleQuery = `SELECT s.scheduleIdx, s.scheduleStartTime
                                 From schedules s 
                                 INNER JOIN usersSchedules us ON s.scheduleIdx = us.scheduleIdx
-                                WHERE us.userIdx = '${userIdx}'` // user에게 달려있는 캘린더 idx들 가져오기
+                                WHERE us.userIdx = '${userIdx}'
+                                ORDER BY s.scheduleStartTime ASC` // user에게 달려있는 캘린더 idx들 가져오기
+                                
         return await pool.queryParam_Arr(getUserScheduleQuery, [currentTime,userIdx])
         .catch((err) => {
             console.log('getUserSchedule err : ' + err)

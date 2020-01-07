@@ -5,12 +5,12 @@ module.exports = {
     find :  (findKeyword) => {
         return new Promise((resolve, reject)=>{
             const options = {
-                'uri' : `https://dapi.kakao.com/v2/local/search/address.json`, 
+                'uri' : `https://dapi.kakao.com/v2/local/search/address.json?page=5`, 
                 'headers' : {
                     'Authorization' : `KakaoAK ${ak.kakao}`,
                 },
                 'qs' : {
-                    'query' : `${findKeyword}`
+                    'query' : `${findKeyword}`,
                 }  
             }
             request(options, async (err, result)=>{
@@ -23,10 +23,10 @@ module.exports = {
             })
         })
     },
-    findByKeyword : (findKeyword) => {
+    findByKeyword : (findKeyword, page) => {
         return new Promise((resolve,reject)=>{
             const options = {
-                'uri' : `https://dapi.kakao.com/v2/local/search/keyword.json?`, 
+                'uri' : `https://dapi.kakao.com/v2/local/search/keyword.json`, 
                 'headers' : {
                     'Authorization' : `KakaoAK ${ak.kakao}`,
                 },

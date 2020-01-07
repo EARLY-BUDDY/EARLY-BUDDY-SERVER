@@ -1,4 +1,4 @@
-const ak = require('../config/appkey').seoul;
+const ak = require('../config/appkey').commonRealTime;
 const request = require('request');
 const urlencode = require('urlencode');
 
@@ -12,7 +12,7 @@ module.exports = {
             request(options, (err, result)=>{
                 if(err) reject(err);
                 else {
-                    console.log(result.body)
+                    resolve(result.body)
                 }
             })
         })

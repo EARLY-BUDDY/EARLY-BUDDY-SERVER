@@ -11,7 +11,6 @@ module.exports = {
         }
 
         try {
-            console.log()
             let result = await searchPath.searchPath(req.query.SX, req.query.SY, req.query.EX, req.query.EY, req.query.SearchPathType)
             res.status(result.code).send(result.json);
         }

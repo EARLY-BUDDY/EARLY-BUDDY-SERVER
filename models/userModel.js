@@ -36,6 +36,14 @@ module.exports = {
                 throw err;
             });
     },
+    getUserName : async (userIdx) => {
+        const getUserNameQuery = `SELECT userName FROM users WHERE userIdx = ?`
+        return await pool.queryParam_Arr(getUserNameQuery, [userIdx])
+        .catch(err => {
+            console.log(err);
+            throw err;
+        });
+    },
     checkId: async (id) => {
         const table = 'users';
         const query = `SELECT * FROM ${table} WHERE userId = '${id}'`;
@@ -62,11 +70,11 @@ module.exports = {
                 throw err;
             });
     },
-    signup: async (userId, password, salt) => {
+    signup: async (userId, password, salt, deviceToken) => {
         const table = 'users';
-        const fields = 'userId, userPw, salt'
-        const questions = `?, ?, ?`;
-        const values = [userId, password, salt];
+        const fields = 'userId, userPw, salt, deviceToken, userName'
+        const questions = `?, ?, ?, ?, ?`;
+        const values = [userId, password, salt, deviceToken, ''];
         try {
             const result = await pool.queryParam_Arr(`INSERT INTO ${table}(${fields}) VALUES (${questions})`, values);
             if (result.code && result.json) return result;

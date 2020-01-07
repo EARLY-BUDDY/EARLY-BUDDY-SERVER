@@ -10,15 +10,24 @@ module.exports = {
     //1. 로그인
     signin : async (req,res) =>{
         const {userId, userPw, deviceToken} = req.body;
-        if(!userId || !userPw || !deviceToken){
+        if(!userId || !userPw ){
             return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(resMsg.NULL_VALUE)); 
         }
         try{
             const {code, json} = await User.signin(userId, userPw)
-            await User.setDeviceToken(userId, deviceToken);
-            res.status(code).send(json)
+            if(code === statusCode.BAD_REQUEST) {
+                return res.status(code).send(json)
+            }
+            let userName = (await User.getUserName(json.data.userIdx))[0].userName;
+            console.log(userName);
+            if(userName === undefined) {
+                json.data.userName = ''
+            }
+            res.status(code).send(json);
+            return;
         } catch (err) {
-            await res.status(statusCode.INTERNAL_SERVER_ERROR).send(responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR));
+            console.log(err);
+            return await res.status(statusCode.FAIL).send(responseUtil.successFalse('INTERNAL_SERVER_ERROR'));
         }
     },
     //2. 닉네임 설정
@@ -28,23 +37,17 @@ module.exports = {
         if(!userName){
             return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(`userName ${resMsg.NULL_VALUE}`));
         }
-        const checkNameResult = await User.checkName(userName);
-        if (!checkNameResult ){
-            return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(resMsg.ALREADY_NAME)); 
-        } 
         try{
             const {code, json} = await User.setUserName(userName,userIdx);
             return res.status(code).send(json);
         } catch (err) {
-            return await res.status(statusCode.INTERNAL_SERVER_ERROR).send(responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR));
+            return await res.status(statusCode.FAIL).send(responseUtil.successFalse('INTERNAL_SERVER_ERROR'));
         }
     },
     //3. 자주가는 장소 설정
     setFavorite : async (req,res) =>{
         const favoriteArr = req.body.favoriteArr;
         const userIdx = req.decoded.idx;
-        console.log(userIdx);
-        console.log(req.decoded);
         if(!favoriteArr){
             return res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(resMsg.NULL_VALUE));
         }
@@ -66,26 +69,28 @@ module.exports = {
             } 
             return res.status(statusCode.OK).send(responseUtil.successTrue(resMsg.SET_FAVORITE_SUCCESS));
         } catch (err) {
-            return res.status(statusCode.INTERNAL_SERVER_ERROR).send(responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR));
+            return await res.status(statusCode.FAIL).send(responseUtil.successFalse('INTERNAL_SERVER_ERROR'));
         }
     },
     //4. 회원가입
     signup : async (req,res) =>{
-        const {userId, userPw} = req.body;
+        const {userId, userPw, deviceToken} = req.body;
         const missParameters = await Object.entries({userId, userPw}).filter(it=>it[1]==undefined).map(it=>it[0]).join(',');
         if(!userId || !userPw){
+            console.log('입력되지 않은 값');
             return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(`${resMsg.NULL_VALUE} ${missParameters}`));
         }
-        const checkIdResult = await User.checkId(userId);
+        const checkIdResult = (await User.checkId(userId));
         if (!checkIdResult ){
+            console.log('여긴가')
             return await res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(resMsg.ALREADY_ID)); 
         } 
         try{
             const {hashed, salt} = await encrypt.encrypt(userPw)
-            const {code, json} =await User.signup(userId, hashed, salt)
+            const {code, json} =await User.signup(userId, hashed, salt, deviceToken)
             res.status(code).send(json);
         }catch(err) {
-            await res.status(statusCode.INTERNAL_SERVER_ERROR).send(responseUtil.successFalse(resMsg.INTERNAL_SERVER_ERROR));
+            return await res.status(statusCode.FAIL).send(responseUtil.successFalse('INTERNAL_SERVER_ERROR'));
         }
     },
     // 5 : 아이디 중복체크
@@ -100,7 +105,7 @@ module.exports = {
             res.status(statusCode.BAD_REQUEST).send(responseUtil.successFalse(resMsg.ALREADY_ID));
             return;
         }
-        res.status(statusCode.OK).send(responseUtil.successTrue(resMsg.USABLE_ID));
+        return res.status(statusCode.OK).send(responseUtil.successTrue(resMsg.USABLE_ID));
     },
     // 6 : 자주 가는 장소 정보 가져오기
     getFavorite : async (req, res)=>{
