@@ -5,19 +5,37 @@ module.exports = {
     find :  (findKeyword) => {
         return new Promise((resolve, reject)=>{
             const options = {
-                'uri' : 'https://dapi.kakao.com/v2/local/search/address.json', 
+                'uri' : `https://dapi.kakao.com/v2/local/search/address.json?page=5`, 
                 'headers' : {
                     'Authorization' : `KakaoAK ${ak.kakao}`,
-                    'Content-Type' : 'application/x-www-form-urlencoded'
+                },
+                'qs' : {
+                    'query' : `${findKeyword}`,
+                }  
+            }
+            request(options, async (err, result)=>{
+                const jsonResult = JSON.parse(result.body);
+                if(err) {
+                    console.log('request err : ' + err);
+                    reject(err)
+                }
+                else resolve(jsonResult);
+            })
+        })
+    },
+    findByKeyword : (findKeyword, page) => {
+        return new Promise((resolve,reject)=>{
+            const options = {
+                'uri' : `https://dapi.kakao.com/v2/local/search/keyword.json`, 
+                'headers' : {
+                    'Authorization' : `KakaoAK ${ak.kakao}`,
                 },
                 'qs' : {
                     'query' : `${findKeyword}`
                 }  
             }
-    
             request(options, async (err, result)=>{
                 const jsonResult = JSON.parse(result.body);
-                console.log(jsonResult);
                 if(err) {
                     console.log('request err : ' + err);
                     reject(err)

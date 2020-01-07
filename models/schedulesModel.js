@@ -1,23 +1,21 @@
-const odsayAPI = require('../module/odsayAPI');
 const resUtil = require('../module/responseUtil');
 const resMsg = require('../module/resMsg');
 const statCode = require('../module/statusCode');
 const pool = require('../module/pool');
-const commonAPI = require('../module/commonAPI');
-const seoulAPI = require('../module/seoulAPI');
 var moment = require('moment');
+const Alarm = require('../module/alarm');
 
 module.exports = {
-    addSchedule: async (scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude) => {
-        const addScheduleQuery = 'INSERT INTO schedules (scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude) VALUES (?,?,?,?,?,?,?,?)';
-        return await pool.queryParam_Arr(addScheduleQuery, [scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude])
+    addSchedule: async (scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude, noticeMin, arriveCount) => {
+        const addScheduleQuery = 'INSERT INTO schedules (scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude, noticeMin, arriveCount) VALUES (?,?,?,?,?,?,?,?,?,?)';
+        return await pool.queryParam_Arr(addScheduleQuery, [scheduleName, scheduleStartTime, startAddress, startLongitude, startLatitude, endAddress, endLongitude, endLatitude, noticeMin, arriveCount])
             .catch((err) => {
                 console.log('addUsersSchedules err : ' + err);
             })
     },
-    addPaths: async (pathType, totalTime, totalPay, totalWalkTime, transitCount) => {
-        const addPathsQuery = 'INSERT INTO paths (pathType, totalTime, totalPay, totalWalkTime, transitCount) VALUES (?,?,?,?,?)';
-        return await pool.queryParam_Arr(addPathsQuery, [pathType, totalTime, totalPay, totalWalkTime, transitCount])
+    addPaths: async (pathType, totalTime, totalPay, totalWalkTime, transitCount, firstStationName) => {
+        const addPathsQuery = 'INSERT INTO paths (pathType, totalTime, totalPay, totalWalkTime, transitCount, firstStationName) VALUES (?,?,?,?,?,?)';
+        return await pool.queryParam_Arr(addPathsQuery, [pathType, totalTime, totalPay, totalWalkTime, transitCount, firstStationName])
             .catch((err) => {
                 console.log('addPaths err : ' + err);
 
@@ -26,29 +24,28 @@ module.exports = {
     addWalk: async (trafficType, distance, sectionTime, pathIdx) => {
         const addWalkDetailQuery = 'INSERT INTO details (trafficType, distance, sectionTime) VALUES (?,?,?)'; //walk = 3 subway = 1, bus = 2
         const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
-        return await pool.Transaction((conn) => {
-            let addWalkDetailResult = conn.query(addWalkDetailQuery, [trafficType, distance, sectionTime]);
-            addWalkDetailResult.then(detailRes => {
-                let addWalkPathsDetailsResult = conn.query(addPathsDetailsQuery, [pathIdx, detailRes.insertId]);
-                console.log('********************');
-                console.log('걷기 추가 완료');
-                console.log('********************');
-            })
+        return await pool.Transaction(async (conn) => {
+            let addWalkDetailResult = await conn.query(addWalkDetailQuery, [trafficType, distance, sectionTime]);
+            let addWalkPathsDetailsResult = await conn.query(addPathsDetailsQuery, [pathIdx, addWalkDetailResult.insertId]);
+            console.log('********************');
+            console.log('걷기 추가 완료');
+            console.log('********************');
+
         })
     },
-    addBus: (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType, stopArray, pathIdx) => {
+    addBus: async (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType, stopArray, pathIdx) => {
         const addBusDetailQuery = 'INSERT INTO details (trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)';
         const addBusDetailsStopsQuery = 'INSERT INTO detailsStops (detailIdx, stopIdx) VALUES (?,?)';//RT
         const addBusStopsQuery = 'INSERT INTO stops (stopName) VALUES (?)';
         const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
-        const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
-        return pool.Transaction(async (conn) => {
+        return await pool.Transaction(async (conn) => {
             let addBusDetailResult = await conn.query(addBusDetailQuery, [trafficType, distance, sectionTime, stationCount, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, busNo, busType]);
+            let addBusPathsDetailsResult = await conn.query(addPathsDetailsQuery, [pathIdx, addBusDetailResult.insertId]);
             for (var j = 0; j < stopArray.length; j++) {
                 let addBusStopsResult = await conn.query(addBusStopsQuery, [stopArray[j].stationName]);
                 let addBusDetailsStopsResult = await conn.query(addBusDetailsStopsQuery, [addBusDetailResult.insertId, addBusStopsResult.insertId]);
             }
-            let addBusPathsDetailsResult = await conn.query(addPathsDetailsQuery, [pathIdx, addBusDetailResult.insertId]);
+            
             console.log('********************');
             console.log('버스 추가 완료');
             console.log('********************');
@@ -61,18 +58,18 @@ module.exports = {
                 })
             })
     },
-    addSubway: (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, stopArray, pathIdx) => {
+    addSubway: async (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude, stopArray, pathIdx) => {
         const addSubwayDetailQuery = 'INSERT INTO details (trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude) VALUES (?,?,?,?,?,?,?,?,?,?,?)';
         const addSubwayStopsQuery = 'INSERT INTO stops (stopName) VALUES (?)';
         const addSubwayDetailsStopsQuery = 'INSERT INTO detailsStops (detailIdx, stopIdx) VALUES (?,?)';//RT
         const addPathsDetailsQuery = 'INSERT INTO pathsDetails (pathIdx, detailIdx) VALUES (?,?)';//RT
-        return pool.Transaction(async (conn) => {
+        return await pool.Transaction(async (conn) => {
             let addSubwayDetailResult = await conn.query(addSubwayDetailQuery, [trafficType, distance, sectionTime, stationCount, subwayLane, detailStartAddress, detailStartLongitude, detailStartLatitude, detailEndAddress, detailEndLongitude, detailEndLatitude]);
+            await conn.query(addPathsDetailsQuery, [pathIdx, addSubwayDetailResult.insertId]);
             for (var i = 0; i < stopArray.length; i++) {
                 let addSubwayStopsResult = await conn.query(addSubwayStopsQuery, [stopArray[i].stationName]);
                 let addSubwayDetailsStopsResult = await conn.query(addSubwayDetailsStopsQuery, [addSubwayDetailResult.insertId, addSubwayStopsResult.insertId]);
             }
-            await conn.query(addPathsDetailsQuery, [pathIdx, addSubwayDetailResult.insertId]);
             console.log('********************');
             console.log(' 지하철 추가 완료');
             console.log('********************')
@@ -80,17 +77,10 @@ module.exports = {
     },
     addTime: async (arriveTime, noticeTime, scheduleIdx) => {
         const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
-        return await pool.Transaction((conn) => {
-            conn.query(addSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime]);
+        return await pool.Transaction(async(conn) => {
+            await conn.query(addSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime]);
+            //await Alarm.setSchedule(scheduleIdx, )
         })
-    },
-    addSchedulesNotices: async (scheduleIdx, arriveTime, noticeTime) => {
-        const addSchedulesNoticesQuery = 'INSERT INTO schedulesNotices (scheduleIdx, arriveTime, noticeTime) VALUES (?,?,?)';
-        return await pool.queryParam_Arr(addSchedulesNoticesQuery, [scheduleIdx, arriveTime, noticeTime])
-            .catch((err) => {
-                console.log('addSchedulesNotices err : ' + err);
-
-            })
     },
     addUsersSchedules: async (userIdx, scheduleIdx) => { //RT
         const addUsersSchedulesQuery = 'INSERT INTO usersSchedules (userIdx, scheduleIdx) VALUES (?,?)';
@@ -117,14 +107,15 @@ module.exports = {
 
             })
     },
-    getDeviceToken: async(userIdx) => {
+    getDeviceToken: async (userIdx) => {
         const getDeviceToken = `SELECT deviceToken FROM users WHERE userIdx = ?`
         return await pool.queryParam_Arr(getDeviceToken, [userIdx])
             .catch((err) => {
                 console.log('getDeviceToken err : ' + err);
             })
     },
-    deleteSchedule : async (scheduleIdx) => {
+    deleteSchedule: async (scheduleIdx) => {
+        const selectNoticeName = `SELECT noticeName FROM schedulesNotices WHERE scheduleIdx = ?`
         const deleteStopsQuery = `DELETE FROM stops WHERE stops.stopIdx IN ( 
             SELECT detailsStops.stopIdx FROM detailsStops WHERE detailsStops.detailIdx IN ( 
                 SELECT detailIdx FROM pathsDetails WHERE pathsDetails.pathIdx IN (
@@ -148,7 +139,9 @@ module.exports = {
         const deleteSchedulesQuery = `DELETE FROM schedules WHERE scheduleIdx = ?`;
         const deleteUserSchedulesQuery = `SELECT * FROM usersSchedules WHERE scheduleIdx = ?`;
         const queryResult = [];
+        const deleteNoticeNames = [];
         return await pool.Transaction(async (connection) => {
+            await connection.query(selectNoticeName, scheduleIdx);
             queryResult.push(await connection.query(deleteStopsQuery, scheduleIdx));
             queryResult.push(await connection.query(deleteDetailsStopsQuery, scheduleIdx));
             queryResult.push(await connection.query(deleteDetailQuery, scheduleIdx));
@@ -160,21 +153,56 @@ module.exports = {
             queryResult.push(await connection.query(deleteSchedulesQuery, scheduleIdx));
             queryResult.push(await connection.query(deleteUserSchedulesQuery, scheduleIdx));
         }).then(async (result) => {
+            await Alarm.deleteAlarm(deleteNoticeNames);
             return queryResult;
         }).catch((err) => {
             console.log('delete err : ' + err);
             throw err;
         })
     },
-    updateSchedule: async (scheduleIdx) => {
-
-    },
     getSchedules: async (scheduleIdx) => {
-        const getSchedulesQuery = `SELECT * FROM schedules LEFT JOIN schedulesPaths ON schedules.scheduleIdx = schedulesPaths.scheduleIdx
-        LEFT JOIN paths ON paths.pathIdx = schedulesPaths.pathIdx WHERE schedules.scheduleIdx = ?`;
-        return await pool.queryParam_Arr(getSchedulesQuery, [scheduleIdx])
-            .catch((err) => {
-                console.log('getSchedulesQuery err : ' + err);
-            })
-    }
+        const getSchedulesQuery = 'SELECT * FROM schedules WHERE scheduleIdx=?'
+        const getNoticeTimeQuery = 'SELECT arriveTime, noticeTime FROM schedulesNotices WHERE scheduleIdx =?'
+        const getStopNameQuery = `SELECT stopName FROM stops WHERE stopIdx IN (
+                                    SELECT stopIdx FROM detailsStops WHERE detailIdx = ?)`;
+        const getDetailQuery = `SELECT * FROM details WHERE detailIdx IN (
+                                    SELECT detailIdx FROM pathsDetails WHERE pathIdx = ?)`;
+        const getPathQuery = `SELECT * FROM paths WHERE pathIdx IN (
+                                SELECT pathIdx FROM schedulesPaths WHERE scheduleIdx=?)`;
+        const getWeekDayQuery = `SELECT weekdayNum FROM weekdays WHERE scheduleIdx = ?`;
+        let returnObj = {};
+        const getSchedulesResult = await pool.queryParam_Arr(getSchedulesQuery, [scheduleIdx]);
+        if(getSchedulesResult.length === 0) {
+            return({code : statCode.BAD_REQUEST, json : resUtil.successFalse(resMsg.NULL_VALUE)});
+        }
+        returnObj.scheduleInfo = getSchedulesResult[0];
+        returnObj.scheduleInfo.scheduleStartDay = returnObj.scheduleInfo.scheduleStartTime.split(' ')[0];
+        returnObj.scheduleInfo.scheduleStartTime = returnObj.scheduleInfo.scheduleStartTime.split(' ')[1];
+        returnObj.weekdayInfo = [];
+        let weekday = await pool.queryParam_Arr(getWeekDayQuery, [scheduleIdx]);
+        for(var i = 0 ; i < weekday.length ; i++) {
+            returnObj.weekdayInfo.push(weekday[i].weekdayNum);
+        }
+        const getNoticeTimeResult = await pool.queryParam_Arr(getNoticeTimeQuery, [scheduleIdx]);
+        returnObj.noticeTime = [];
+        for(var i = 0 ; i < getNoticeTimeResult.length; i++) {
+            returnObj.noticeTime.push(getNoticeTimeResult[i]);
+        }
+        const getPathResult = await pool.queryParam_Arr(getPathQuery, [scheduleIdx]);
+        returnObj.path = getPathResult[0];
+        const getDetailResult = await pool.queryParam_Arr(getDetailQuery, [getPathResult[0].pathIdx]);
+        returnObj.path.subPath = [];
+        for (var i = 0; i < getDetailResult.length; i++) {
+            getDetailResult[i].clicked = false;
+            returnObj.path.subPath[i] = getDetailResult[i];
+            if (getDetailResult[i].trafficType !== 3) {
+                let getStopResult = await pool.queryParam_Arr(getStopNameQuery, [getDetailResult[i].detailIdx])
+                returnObj.path.subPath[i].stops = [];
+                for (var j = 0; j < getStopResult.length; j++) {
+                    returnObj.path.subPath[i].stops.push(getStopResult[j].stopName);
+                }
+            }
+        }
+        return returnObj;
+    },
 }

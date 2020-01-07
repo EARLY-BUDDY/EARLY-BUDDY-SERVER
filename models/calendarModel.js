@@ -6,42 +6,6 @@ const statCode = require('../module/statusCode');
 module.exports = {
     getCalendarSchedules : async (userIdx, year, month) =>{
 
-        /*
-        var startTime;
-        var endTime;
-
-        year *= 1;
-        month *= 1;
-        
-        var prevYear;
-        var prevMonth;
-        var nextYear;
-        var nextMonth;
-
-        if(month == '1'){
-            startTime = (year-1) + '-12-01';
-            endTime = year +'-2-28';
-            prevYear = year-1;
-            prevMonth = 12;
-            nextYear = year;
-            nextMonth = 2;
-        }else if(month == '12'){
-            startTime = year + '-11-01';
-            endTime = (year *1 + 1) + '-01-31';
-            prevYear = year;
-            prevMonth = 11;
-            nextYear = year+1;
-            nextMonth = 1;
-        }else{
-            startTime = year + '-' + (month-1) + '-' + '01';
-            endTime = year + '-' + (month +1) + '-' + '31';
-            
-            prevYear = year;
-            prevMonth = month;
-            nextYear = year;
-            nextMonth = month;
-        }*/
-
         var startTime = year + '-' + month + '-'+'01';
         var endTime = year + '-' + month + '-'+'31';
 

@@ -2,10 +2,13 @@ const pool = require('../module/pool');
 
 module.exports = {
     getUserSchedules : async (userIdx, currentTime) => {
+        // db 자체에는 mills로 저장되어 있기 때문에 그냥 크기 비교 하면 된다! where
         const getUserScheduleQuery = `SELECT s.scheduleIdx, s.scheduleStartTime
                                 From schedules s 
                                 INNER JOIN usersSchedules us ON s.scheduleIdx = us.scheduleIdx
-                                WHERE us.userIdx = '${userIdx}'` // user에게 달려s있는 캘린더 idx들 가져오기
+                                WHERE us.userIdx = '${userIdx}'
+                                ORDER BY s.scheduleStartTime ASC` // user에게 달려있는 캘린더 idx들 가져오기
+                                
         return await pool.queryParam_Arr(getUserScheduleQuery, [currentTime,userIdx])
         .catch((err) => {
             console.log('getUserSchedule err : ' + err)

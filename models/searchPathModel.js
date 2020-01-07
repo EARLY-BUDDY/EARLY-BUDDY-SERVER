@@ -6,9 +6,8 @@ const statCode = require('../module/statusCode');
 const pool = require('../module/pool');
 
 module.exports = {
-    searchPath: async (SX, SY, EX, EY) => {
-        
-        let result = await odsayAPI.searchPubTransPath(SX, SY, EX, EY);
+    searchPath: async (SX, SY, EX, EY, SearchPathType) => {
+        let result = await odsayAPI.searchPubTransPath(SX, SY, EX, EY, SearchPathType);
         if (result === undefined) {
             return({
                 code: statCode.BAD_REQUEST,
@@ -16,17 +15,25 @@ module.exports = {
             })
         }
         let path = result.path;
+        if(path === undefined) {
+            return({
+                code: statCode.BAD_REQUEST,
+                json: resUtil.successFalse(resMsg.FIND_PATH_FAILED)
+            })
+        }
         let totalWalkTime = 0;
         let count = 0;
         for (var i = 0; i < path.length; i++) {
             for (var j = 0; j < path[i].subPath.length; j++) {
                 if (path[i].subPath[j].trafficType === 3) {
                     totalWalkTime += path[i].subPath[j].sectionTime;
+                    continue;
                 }
                 else {
                     count += 1;
                 }
                 path[i].subPath[j].clicked = false;
+                path[i].subPath[j].lane = path[i].subPath[j].lane[0];
             }
             path[i] = {
                 pathType: path[i].pathType,
